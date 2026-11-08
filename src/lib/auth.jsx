@@ -31,7 +31,13 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
-  return <AuthContext.Provider value={{ user, daftar, masuk, keluar }}>{children}</AuthContext.Provider>
+  async function perbaruiProfil(perubahan) {
+    const { data, error } = await db.ubahProfil(perubahan)
+    if (data) setUser(data)
+    return error
+  }
+
+  return <AuthContext.Provider value={{ user, daftar, masuk, keluar, perbaruiProfil }}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {
@@ -40,7 +46,7 @@ export function useAuth() {
 
 /** Halaman yang wajib login (Beranda, Ubah). */
 export function RuteLogin({ children }) {
-  return useAuth().user ? children : <Navigate to="/masuk" replace />
+  return useAuth().user ? children : <Navigate to="/selamat-datang" replace />
 }
 
 /** Halaman untuk tamu (Daftar, Masuk): kalau sudah login, langsung ke Beranda. */

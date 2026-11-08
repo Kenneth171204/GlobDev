@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { ArrowRight, Lock, Mail, UserRound } from 'lucide-react'
 import { useAuth } from '../lib/auth.jsx'
 import { pesanGalat } from '../lib/bulking.js'
-import Header from '../components/Header.jsx'
+import AuthLayout, { IsianIkon } from '../components/AuthLayout.jsx'
 
 export default function Daftar() {
   const { daftar } = useAuth()
@@ -32,35 +33,24 @@ export default function Daftar() {
   }
 
   return (
-    <main className="halaman">
-      <Header />
-      <section className="panel masuk">
-        <h1>Daftar</h1>
-        <p>Buat akun untuk mulai mencatat latihan dan protein harianmu.</p>
-        <form className="form" onSubmit={kirim} noValidate>
-          <div className="isian">
-            <label htmlFor="nama">Nama</label>
-            <input id="nama" autoComplete="name" value={nama} onChange={(e) => setNama(e.target.value)}
-              className={galat.nama ? 'salah' : ''} />
-            {galat.nama && <p className="pesan-salah">{galat.nama}</p>}
-          </div>
-          <div className="isian">
-            <label htmlFor="email">Email</label>
-            <input id="email" type="email" autoComplete="email" value={email}
-              onChange={(e) => setEmail(e.target.value)} className={galat.email ? 'salah' : ''} />
-            {galat.email && <p className="pesan-salah">{galat.email}</p>}
-          </div>
-          <div className="isian">
-            <label htmlFor="password">Password</label>
-            <input id="password" type="password" autoComplete="new-password" value={password}
-              onChange={(e) => setPassword(e.target.value)} className={galat.password ? 'salah' : ''} />
-            {galat.password && <p className="pesan-salah">{galat.password}</p>}
-          </div>
-          {galatServer && <p className="galat" role="alert">{galatServer}</p>}
-          <button className="tombol" type="submit" disabled={mengirim}>{mengirim ? 'Mendaftar…' : 'Daftar'}</button>
-        </form>
-        <p className="tautan-bawah">Sudah punya akun? <Link to="/masuk">Masuk</Link></p>
-      </section>
-    </main>
+    <AuthLayout
+      judul="Buat akun"
+      subjudul="Mulai catat latihan & protein harianmu."
+      bawah={<>Sudah punya akun? <Link to="/masuk">Masuk</Link></>}
+    >
+      <form className="form" onSubmit={kirim} noValidate>
+        <IsianIkon id="nama" label="Nama" ikon={UserRound} autoComplete="name" placeholder="Nama kamu"
+          value={nama} onChange={(e) => setNama(e.target.value)} galat={galat.nama} />
+        <IsianIkon id="email" label="Email" ikon={Mail} type="email" autoComplete="email" placeholder="kamu@email.com"
+          value={email} onChange={(e) => setEmail(e.target.value)} galat={galat.email} />
+        <IsianIkon id="password" label="Password" ikon={Lock} type="password" autoComplete="new-password"
+          placeholder="Minimal 6 karakter" value={password} onChange={(e) => setPassword(e.target.value)}
+          galat={galat.password} />
+        {galatServer && <p className="galat" role="alert">{galatServer}</p>}
+        <button className="tombol tombol-biru" type="submit" disabled={mengirim}>
+          {mengirim ? 'Mendaftar…' : <>Daftar <ArrowRight size={20} strokeWidth={2.6} /></>}
+        </button>
+      </form>
+    </AuthLayout>
   )
 }

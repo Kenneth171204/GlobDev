@@ -1,6 +1,6 @@
 // Aturan dan perhitungan untuk Log Harian (Fase 1).
 
-export const TARGET_PROTEIN = 130 // gram per hari
+export const TARGET_PROTEIN = 130 // gram per hari (default; bisa diubah di Profil)
 
 export const DAFTAR_SPLIT = ['Push', 'Pull', 'Legs', 'Upper', 'Lower', 'Full Body', 'Rest']
 
@@ -117,4 +117,54 @@ export function keIsianForm(log) {
 export function pesanGalat(error) {
   if (!error) return ''
   return error.message || 'Terjadi kesalahan. Coba lagi.'
+}
+
+/** Warna aksen per split (dipakai badge dan ikon kartu). */
+export const WARNA_SPLIT = {
+  Push: 'oranye', Pull: 'biru', Legs: 'lime', Upper: 'kuning', Lower: 'langit', 'Full Body': 'hitam', Rest: 'abu',
+}
+
+/**
+ * Deret harian untuk grafik: `jumlahHari` hari terakhir sampai hari ini.
+ * Hari tanpa log bernilai null.
+ */
+export function seriHarian(logs, jumlahHari, hariIni = new Date()) {
+  const peta = new Map(logs.map((l) => [l.tanggal, l]))
+  const hasil = []
+  for (let i = jumlahHari - 1; i >= 0; i--) {
+    const d = new Date(hariIni)
+    d.setDate(d.getDate() - i)
+    const t = tanggalLokal(d)
+    const log = peta.get(t)
+    hasil.push({
+      tanggal: t,
+      label: jumlahHari <= 7
+        ? d.toLocaleDateString('id-ID', { weekday: 'short' })
+        : String(d.getDate()),
+      protein: log ? log.protein_gram : null,
+      berat: log?.berat_badan_kg != null ? Number(log.berat_badan_kg) : null,
+    })
+  }
+  return hasil
+}
+
+/** Jumlah hari berturut-turut (sampai hari ini atau kemarin) yang mencapai target protein. */
+export function streakTarget(logs, target, hariIni = new Date()) {
+  const peta = new Map(logs.map((l) => [l.tanggal, l.protein_gram]))
+  const d = new Date(hariIni)
+  // Hari ini belum mencapai target? Mulai hitung dari kemarin supaya streak tidak "putus" pagi-pagi.
+  if (!((peta.get(tanggalLokal(d)) ?? 0) >= target)) d.setDate(d.getDate() - 1)
+  let n = 0
+  while ((peta.get(tanggalLokal(d)) ?? -1) >= target) {
+    n++
+    d.setDate(d.getDate() - 1)
+  }
+  return n
+}
+
+/** Validasi target protein di halaman Profil. */
+export function validasiTarget(nilai) {
+  const n = Number(nilai)
+  if (nilai === '' || !Number.isInteger(n) || n < 50 || n > 400) return 'Isi angka bulat 50–400 gram.'
+  return ''
 }

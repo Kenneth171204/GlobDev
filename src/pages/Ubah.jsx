@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { ChevronLeft } from 'lucide-react'
 import * as db from '../lib/db.js'
 import { keBarisLog, keIsianForm, pesanGalat } from '../lib/bulking.js'
-import Header from '../components/Header.jsx'
 import FormLog from '../components/FormLog.jsx'
 
 export default function Ubah() {
@@ -28,21 +28,29 @@ export default function Ubah() {
   }
 
   return (
-    <main className="halaman">
-      <Header />
-      <section className="panel">
-        <h2>Ubah log</h2>
+    <>
+      <div className="topbar">
+        <button type="button" className="tombol-ikon" onClick={() => navigate('/')} aria-label="Kembali">
+          <ChevronLeft size={22} strokeWidth={2.6} />
+        </button>
+        <h1 className="judul-halaman">Ubah log</h1>
+        <span style={{ width: 40 }} />
+      </div>
+      <section className="kartu">
         {memuat ? (
           <p className="status">Memuat log…</p>
         ) : galat ? (
           <p className="galat" role="alert">{galat}</p>
         ) : !log ? (
-          <p className="status">Log tidak ditemukan. <Link to="/">Kembali ke Beranda</Link></p>
+          <div className="status">
+            <p><strong>Log tidak ditemukan.</strong></p>
+            <p><Link to="/">Kembali ke Beranda</Link></p>
+          </div>
         ) : (
           <FormLog awal={keIsianForm(log)} labelSimpan="Simpan perubahan" onSimpan={simpan}
             onBatal={() => navigate('/')} />
         )}
       </section>
-    </main>
+    </>
   )
 }

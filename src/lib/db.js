@@ -5,6 +5,8 @@
 // Catatan: ini simulasi untuk demo. Data hanya ada di browser ini, dan siapa pun
 // yang memakai browser yang sama bisa membacanya lewat DevTools.
 
+import { TARGET_PROTEIN } from './bulking.js'
+
 const KUNCI_USER = 'gerak_users'
 const KUNCI_SESI = 'gerak_sesi'
 const KUNCI_LOG = 'gerak_logs'
@@ -39,7 +41,12 @@ async function hash(teks) {
 }
 
 function publik(user) {
-  return { id: user.id, nama: user.nama, email: user.email }
+  return {
+    id: user.id,
+    nama: user.nama,
+    email: user.email,
+    target_protein: user.target_protein ?? TARGET_PROTEIN,
+  }
 }
 
 // ---------- Autentikasi ----------
@@ -56,7 +63,13 @@ export async function daftar({ nama, email, password }) {
   if (users.some((u) => u.email === emailRapi)) {
     return { data: null, error: { message: 'Email sudah terdaftar. Silakan masuk.' } }
   }
-  const user = { id: buatId(), nama: nama.trim(), email: emailRapi, password: await hash(password) }
+  const user = {
+    id: buatId(),
+    nama: nama.trim(),
+    email: emailRapi,
+    password: await hash(password),
+    target_protein: TARGET_PROTEIN,
+  }
   const error = tulis(KUNCI_USER, [...users, user]) || tulis(KUNCI_SESI, user.id)
   return error ? { data: null, error } : { data: publik(user), error: null }
 }
@@ -72,6 +85,17 @@ export async function masuk({ email, password }) {
 
 export function keluar() {
   try { localStorage.removeItem(KUNCI_SESI) } catch { /* abaikan */ }
+}
+
+/** Ubah profil user aktif (nama dan/atau target protein). */
+export async function ubahProfil(perubahan) {
+  const { user, error } = wajibLogin()
+  if (error) return { data: null, error }
+  const users = baca(KUNCI_USER, [])
+  const i = users.findIndex((u) => u.id === user.id)
+  users[i] = { ...users[i], ...perubahan }
+  const galat = tulis(KUNCI_USER, users)
+  return galat ? { data: null, error: galat } : { data: publik(users[i]), error: null }
 }
 
 // ---------- Log Harian (CRUD) ----------

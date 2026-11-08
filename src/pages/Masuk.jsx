@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { ArrowRight, Lock, Mail } from 'lucide-react'
 import { useAuth } from '../lib/auth.jsx'
 import { pesanGalat } from '../lib/bulking.js'
-import Header from '../components/Header.jsx'
+import AuthLayout, { IsianIkon } from '../components/AuthLayout.jsx'
 
 export default function Masuk() {
   const { masuk } = useAuth()
@@ -29,29 +30,22 @@ export default function Masuk() {
   }
 
   return (
-    <main className="halaman">
-      <Header />
-      <section className="panel masuk">
-        <h1>Masuk</h1>
-        <p>Lanjutkan mencatat progres bulking-mu.</p>
-        <form className="form" onSubmit={kirim} noValidate>
-          <div className="isian">
-            <label htmlFor="email">Email</label>
-            <input id="email" type="email" autoComplete="email" value={email}
-              onChange={(e) => setEmail(e.target.value)} className={galat.email ? 'salah' : ''} />
-            {galat.email && <p className="pesan-salah">{galat.email}</p>}
-          </div>
-          <div className="isian">
-            <label htmlFor="password">Password</label>
-            <input id="password" type="password" autoComplete="current-password" value={password}
-              onChange={(e) => setPassword(e.target.value)} className={galat.password ? 'salah' : ''} />
-            {galat.password && <p className="pesan-salah">{galat.password}</p>}
-          </div>
-          {galatServer && <p className="galat" role="alert">{galatServer}</p>}
-          <button className="tombol" type="submit" disabled={mengirim}>{mengirim ? 'Masuk…' : 'Masuk'}</button>
-        </form>
-        <p className="tautan-bawah">Belum punya akun? <Link to="/daftar">Daftar</Link></p>
-      </section>
-    </main>
+    <AuthLayout
+      judul="Selamat datang lagi"
+      subjudul="Lanjutkan progres bulking-mu."
+      bawah={<>Belum punya akun? <Link to="/daftar">Daftar</Link></>}
+    >
+      <form className="form" onSubmit={kirim} noValidate>
+        <IsianIkon id="email" label="Email" ikon={Mail} type="email" autoComplete="email" placeholder="kamu@email.com"
+          value={email} onChange={(e) => setEmail(e.target.value)} galat={galat.email} />
+        <IsianIkon id="password" label="Password" ikon={Lock} type="password" autoComplete="current-password"
+          placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)}
+          galat={galat.password} />
+        {galatServer && <p className="galat" role="alert">{galatServer}</p>}
+        <button className="tombol tombol-biru" type="submit" disabled={mengirim}>
+          {mengirim ? 'Masuk…' : <>Masuk <ArrowRight size={20} strokeWidth={2.6} /></>}
+        </button>
+      </form>
+    </AuthLayout>
   )
 }
