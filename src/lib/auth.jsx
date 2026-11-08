@@ -1,23 +1,37 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { supabase } from './supabase.js'
+import * as db from './db.js'
 
-const AuthContext = createContext({ session: null, memuat: true })
+const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [session, setSession] = useState(null)
-  const [memuat, setMemuat] = useState(true)
+  const [user, setUser] = useState(() => db.userAktif())
 
+  // Ikuti login/keluar dari tab browser lain.
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
-      setMemuat(false)
-    })
-    const { data } = supabase.auth.onAuthStateChange((_event, s) => setSession(s))
-    return () => data.subscription.unsubscribe()
+    const sinkron = () => setUser(db.userAktif())
+    window.addEventListener('storage', sinkron)
+    return () => window.removeEventListener('storage', sinkron)
   }, [])
 
-  return <AuthContext.Provider value={{ session, memuat }}>{children}</AuthContext.Provider>
+  async function daftar(isian) {
+    const { data, error } = await db.daftar(isian)
+    if (data) setUser(data)
+    return error
+  }
+
+  async function masuk(isian) {
+    const { data, error } = await db.masuk(isian)
+    if (data) setUser(data)
+    return error
+  }
+
+  function keluar() {
+    db.keluar()
+    setUser(null)
+  }
+
+  return <AuthContext.Provider value={{ user, daftar, masuk, keluar }}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {
@@ -26,16 +40,10 @@ export function useAuth() {
 
 /** Halaman yang wajib login (Beranda, Ubah). */
 export function RuteLogin({ children }) {
-  const { session, memuat } = useAuth()
-  if (memuat) return <p className="status">Memuat…</p>
-  if (!session) return <Navigate to="/masuk" replace />
-  return children
+  return useAuth().user ? children : <Navigate to="/masuk" replace />
 }
 
 /** Halaman untuk tamu (Daftar, Masuk): kalau sudah login, langsung ke Beranda. */
 export function RuteTamu({ children }) {
-  const { session, memuat } = useAuth()
-  if (memuat) return <p className="status">Memuat…</p>
-  if (session) return <Navigate to="/" replace />
-  return children
+  return useAuth().user ? <Navigate to="/" replace /> : children
 }

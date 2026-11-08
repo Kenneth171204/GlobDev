@@ -113,15 +113,8 @@ export function keIsianForm(log) {
   }
 }
 
-/** Pesan galat Supabase yang ramah. */
+/** Teks galat untuk ditampilkan ke user. */
 export function pesanGalat(error) {
   if (!error) return ''
-  if (error.code === '23505') return 'Log untuk tanggal ini sudah ada. Ubah log yang sudah ada saja.'
-  const m = error.message || ''
-  if (/invalid login credentials/i.test(m)) return 'Email atau password salah.'
-  if (/already registered|already exists/i.test(m)) return 'Email sudah terdaftar. Silakan masuk.'
-  if (/password should be at least/i.test(m)) return 'Password minimal 6 karakter.'
-  if (/email not confirmed/i.test(m)) return 'Email belum dikonfirmasi. Cek kotak masuk email-mu.'
-  if (/failed to fetch|network/i.test(m)) return 'Tidak bisa terhubung ke server. Cek koneksi internet.'
-  return m || 'Terjadi kesalahan. Coba lagi.'
+  return error.message || 'Terjadi kesalahan. Coba lagi.'
 }

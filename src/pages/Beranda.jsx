@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { supabase } from '../lib/supabase.js'
+import * as db from '../lib/db.js'
 import {
   TARGET_PROTEIN, beratTerakhir, formatTanggal, hariLatihanMingguIni, keBarisLog,
   pesanGalat, proteinHariIni, rataProtein7Hari,
@@ -17,10 +17,7 @@ export default function Beranda() {
   const [berhasil, setBerhasil] = useState('')
 
   const muat = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('log_harian')
-      .select('*')
-      .order('tanggal', { ascending: false })
+    const { data, error } = await db.ambilLogs()
     if (error) setGalat(pesanGalat(error))
     else {
       setGalat('')
@@ -32,7 +29,7 @@ export default function Beranda() {
   useEffect(() => { muat() }, [muat])
 
   async function tambah(isian) {
-    const { error } = await supabase.from('log_harian').insert(keBarisLog(isian))
+    const { error } = await db.tambahLog(keBarisLog(isian))
     if (error) return pesanGalat(error)
     setBerhasil('Log tersimpan.')
     setTimeout(() => setBerhasil(''), 2500)
@@ -42,7 +39,7 @@ export default function Beranda() {
 
   async function hapus(log) {
     if (!window.confirm(`Hapus log ${formatTanggal(log.tanggal)}? Data tidak bisa dikembalikan.`)) return
-    const { error } = await supabase.from('log_harian').delete().eq('id', log.id)
+    const { error } = await db.hapusLog(log.id)
     if (error) return setGalat(pesanGalat(error))
     setLogs((l) => l.filter((x) => x.id !== log.id))
   }

@@ -1,16 +1,16 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { supabase } from '../lib/supabase.js'
+import { useAuth } from '../lib/auth.jsx'
 import { pesanGalat } from '../lib/bulking.js'
 import Header from '../components/Header.jsx'
 
 export default function Daftar() {
+  const { daftar } = useAuth()
   const [nama, setNama] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [galat, setGalat] = useState({})
   const [galatServer, setGalatServer] = useState('')
-  const [info, setInfo] = useState('')
   const [mengirim, setMengirim] = useState(false)
 
   async function kirim(e) {
@@ -25,15 +25,10 @@ export default function Daftar() {
     if (Object.keys(g).length > 0) return
 
     setMengirim(true)
-    const { data, error } = await supabase.auth.signUp({
-      email: email.trim(),
-      password,
-      options: { data: { nama: nama.trim() } },
-    })
+    const error = await daftar({ nama, email, password })
     setMengirim(false)
-    if (error) return setGalatServer(pesanGalat(error))
-    // Konfirmasi email mati → session langsung ada dan RuteTamu mengarahkan ke Beranda.
-    if (!data.session) setInfo('Akun dibuat. Cek email-mu untuk konfirmasi, lalu masuk.')
+    if (error) setGalatServer(pesanGalat(error))
+    // Berhasil → langsung login dan RuteTamu mengarahkan ke Beranda.
   }
 
   return (
@@ -62,7 +57,6 @@ export default function Daftar() {
             {galat.password && <p className="pesan-salah">{galat.password}</p>}
           </div>
           {galatServer && <p className="galat" role="alert">{galatServer}</p>}
-          {info && <p className="info">{info}</p>}
           <button className="tombol" type="submit" disabled={mengirim}>{mengirim ? 'Mendaftar…' : 'Daftar'}</button>
         </form>
         <p className="tautan-bawah">Sudah punya akun? <Link to="/masuk">Masuk</Link></p>

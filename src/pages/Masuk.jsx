@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { supabase } from '../lib/supabase.js'
+import { useAuth } from '../lib/auth.jsx'
 import { pesanGalat } from '../lib/bulking.js'
 import Header from '../components/Header.jsx'
 
 export default function Masuk() {
+  const { masuk } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [galat, setGalat] = useState({})
@@ -21,7 +22,7 @@ export default function Masuk() {
     if (Object.keys(g).length > 0) return
 
     setMengirim(true)
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
+    const error = await masuk({ email, password })
     setMengirim(false)
     if (error) setGalatServer(pesanGalat(error))
     // Berhasil → RuteTamu otomatis mengarahkan ke Beranda.
