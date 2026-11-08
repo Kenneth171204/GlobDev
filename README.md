@@ -49,7 +49,16 @@ Buka `http://localhost:5173`, lalu daftar akun baru.
 
 ## Deploy ke Cloudflare Pages
 
-Build command: `npm run build`, output folder: `dist`. File `public/_redirects` sudah disiapkan agar URL seperti `/ubah/...` tidak 404 saat dimuat ulang.
+Live: **https://bulkup.pages.dev** (project Cloudflare Pages `bulkup`).
+
+Untuk deploy ulang setelah ada perubahan (butuh `npx wrangler login` sekali):
+
+```
+npm run build
+npx wrangler pages deploy dist --project-name bulkup --branch main
+```
+
+File `public/_redirects` membuat URL seperti `/statistik` atau `/ubah/...` tetap jalan saat dimuat ulang.
 
 ## Struktur folder
 
