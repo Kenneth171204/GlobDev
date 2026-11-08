@@ -85,3 +85,22 @@ button, input, select, textarea { font: inherit; }
   .form-baris { grid-template-columns: 1fr; }
   .ringkasan strong { font-size: 20px; }
 }
+
+/* Tambahan Bulking & Workout Tracker (Fase 1) */
+.ringkasan-4 { grid-template-columns: repeat(4, 1fr); }
+.ringkasan .satuan { display: inline; font-size: 14px; font-weight: 600; color: var(--redup); }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 99px; background: #e9edfd; color: var(--biru-tua); font-size: 12px; font-weight: 700; vertical-align: middle; }
+.badge-rest { background: var(--garis); color: var(--redup); }
+.tercapai { color: var(--hijau); font-weight: 700; }
+.aksi-form { display: flex; gap: 8px; flex-wrap: wrap; }
+.tautan-bawah { margin: 16px 0 0; text-align: center; color: var(--redup); font-size: 14px; }
+.tautan-bawah a { color: var(--biru); font-weight: 600; }
+a.tombol-garis { display: inline-flex; align-items: center; text-decoration: none; }
+.kartu-aksi { flex-wrap: wrap; justify-content: flex-end; }
+
+@media (max-width: 600px) {
+  .ringkasan-4 { grid-template-columns: repeat(2, 1fr); }
+  .kartu { flex-wrap: wrap; }
+  .kartu-aksi { width: 100%; }
+  .header-akun span { display: none; }
+}
