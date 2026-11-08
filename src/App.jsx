@@ -1,30 +1,35 @@
-import { latihanContoh } from './data/contoh.js'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { AuthProvider, RuteLogin, RuteTamu } from './lib/auth.jsx'
+import AppLayout from './components/AppLayout.jsx'
+import Onboarding from './pages/Onboarding.jsx'
+import Daftar from './pages/Daftar.jsx'
+import Masuk from './pages/Masuk.jsx'
+import Beranda from './pages/Beranda.jsx'
+import Statistik from './pages/Statistik.jsx'
+import Profil from './pages/Profil.jsx'
+import Ubah from './pages/Ubah.jsx'
 
-// Starter Gerak (sesi 1). Kalau halaman ini tampil di browser, setup-mu berhasil.
-// Di sesi 2 kita ganti isi halaman ini dengan komponen: ringkasan, form, dan
-// daftar latihan.
 export default function App() {
   return (
-    <main className="halaman">
-      <header className="header">
-        <div className="logo">
-          <img src="/gerak.svg" alt="" />
-          Gerak
-        </div>
-      </header>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Tamu (belum login) */}
+          <Route path="/selamat-datang" element={<RuteTamu><Onboarding /></RuteTamu>} />
+          <Route path="/daftar" element={<RuteTamu><Daftar /></RuteTamu>} />
+          <Route path="/masuk" element={<RuteTamu><Masuk /></RuteTamu>} />
 
-      <section className="panel">
-        <h2>Setup berhasil 🎉</h2>
-        <p>
-          Starter Gerak sudah jalan di laptopmu. Ada {latihanContoh.length} latihan contoh
-          di <code>src/data/contoh.js</code>. Di sesi 2 kita tampilkan sebagai kartu.
-        </p>
-      </section>
+          {/* Wajib login: semua memakai bottom navigation */}
+          <Route element={<RuteLogin><AppLayout /></RuteLogin>}>
+            <Route path="/" element={<Beranda />} />
+            <Route path="/statistik" element={<Statistik />} />
+            <Route path="/profil" element={<Profil />} />
+            <Route path="/ubah/:id" element={<Ubah />} />
+          </Route>
 
-      <section className="panel">
-        <h2>Data contoh</h2>
-        <pre>{JSON.stringify(latihanContoh, null, 2)}</pre>
-      </section>
-    </main>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   )
 }
