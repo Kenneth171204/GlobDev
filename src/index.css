@@ -255,6 +255,22 @@ fieldset.isian { border: 0; padding: 0; margin: 0; min-width: 0; }
 .isian-ikon svg { margin-left: 14px; color: var(--redup); flex: none; }
 .isian-ikon input, .isian-satuan input { border: 0 !important; background: transparent !important; min-width: 0; }
 .isian-satuan span { padding: 0 14px 0 4px; font-weight: 800; color: var(--redup); }
+/* Autofill browser memberi latar biru hanya di <input>, sehingga tidak menyatu dengan ikon/satuan.
+   Samakan dengan warna kotak isian (latar normal & saat fokus). */
+.isian input:-webkit-autofill,
+.isian input:-webkit-autofill:hover {
+  -webkit-text-fill-color: var(--hitam);
+  -webkit-box-shadow: 0 0 0 100px var(--latar) inset;
+  box-shadow: 0 0 0 100px var(--latar) inset;
+  caret-color: var(--hitam);
+  transition: background-color 9999s ease-out 0s;
+}
+.isian input:-webkit-autofill:focus,
+.isian-ikon:focus-within input:-webkit-autofill,
+.isian-satuan:focus-within input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 100px #fff inset;
+  box-shadow: 0 0 0 100px #fff inset;
+}
 .isian-besar input { font-size: 26px; font-weight: 900; }
 
 .pilihan-split { display: flex; flex-wrap: wrap; gap: 8px; }
