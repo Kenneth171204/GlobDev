@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
-import { Plus } from 'lucide-react'
+import { CircleHelp, Plus } from 'lucide-react'
 import { useAuth } from '../lib/auth.jsx'
 import Logo from './Logo.jsx'
 import BottomNav, { MENU, useBukaFormCatat } from './BottomNav.jsx'
@@ -29,9 +29,15 @@ export default function AppLayout() {
             <Plus size={18} strokeWidth={3} aria-hidden="true" /> Catat log
           </button>
         </nav>
-        <Link to="/profil" className="avatar avatar-kecil" aria-label={`Profil ${user.nama}`}>
-          {user.nama.charAt(0).toUpperCase()}
-        </Link>
+        <div className="header-kanan">
+          <NavLink to="/bantuan" className="tombol-bantuan" aria-label="Bantuan cara pakai" title="Bantuan">
+            <CircleHelp size={22} strokeWidth={2.4} aria-hidden="true" />
+            <span>Bantuan</span>
+          </NavLink>
+          <Link to="/profil" className="avatar avatar-kecil" aria-label={`Profil ${user.nama}`}>
+            {user.nama.charAt(0).toUpperCase()}
+          </Link>
+        </div>
       </header>
       <main className="konten">
         <Outlet />
