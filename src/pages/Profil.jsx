@@ -4,9 +4,11 @@ import { useAuth } from '../lib/auth.jsx'
 import { useLogs } from '../lib/useLogs.js'
 import { beratTerakhir, pesanGalat, streakTarget, validasiTarget } from '../lib/bulking.js'
 import BannerDemo from '../components/BannerDemo.jsx'
+import { useKonfirmasi } from '../components/Konfirmasi.jsx'
 
 export default function Profil() {
   const { user, keluar, perbaruiProfil } = useAuth()
+  const konfirmasi = useKonfirmasi()
   const { logs } = useLogs()
   const [target, setTarget] = useState(String(user.target_protein))
   const [galat, setGalat] = useState('')
@@ -31,9 +33,19 @@ export default function Profil() {
     else setBerhasil('Target protein diperbarui.')
   }
 
-  function konfirmasiKeluar() {
-    const pesan = user.demo ? 'Keluar dari mode coba? Data contoh akan dihapus.' : 'Keluar dari akun ini?'
-    if (window.confirm(pesan)) keluar()
+  async function konfirmasiKeluar() {
+    const yakin = await konfirmasi(user.demo
+      ? {
+          judul: 'Keluar dari mode coba?',
+          pesan: 'Data contoh akan dihapus. Daftar gratis kalau ingin menyimpan progresmu.',
+          labelYa: 'Keluar', ikon: 'keluar', bahaya: true,
+        }
+      : {
+          judul: 'Keluar dari akun?',
+          pesan: 'Data kamu tetap aman. Masuk lagi kapan saja dengan email dan password-mu.',
+          labelYa: 'Keluar', ikon: 'keluar',
+        })
+    if (yakin) keluar()
   }
 
   return (
