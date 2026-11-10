@@ -5,7 +5,7 @@
 // Catatan: ini simulasi untuk demo. Data hanya ada di browser ini, dan siapa pun
 // yang memakai browser yang sama bisa membacanya lewat DevTools.
 
-import { TARGET_PROTEIN } from './bulking.js'
+import { TARGET_PROTEIN, tanggalLokal } from './bulking.js'
 
 const KUNCI_USER = 'gerak_users'
 const KUNCI_SESI = 'gerak_sesi'
@@ -46,6 +46,7 @@ function publik(user) {
     nama: user.nama,
     email: user.email,
     target_protein: user.target_protein ?? TARGET_PROTEIN,
+    demo: Boolean(user.demo),
   }
 }
 
@@ -84,7 +85,38 @@ export async function masuk({ email, password }) {
 }
 
 export function keluar() {
+  // Akun mode coba dibuang beserta datanya supaya tidak menumpuk.
+  const user = userAktif()
+  if (user?.demo) {
+    tulis(KUNCI_USER, baca(KUNCI_USER, []).filter((u) => u.id !== user.id))
+    tulis(KUNCI_LOG, baca(KUNCI_LOG, []).filter((l) => l.user_id !== user.id))
+  }
   try { localStorage.removeItem(KUNCI_SESI) } catch { /* abaikan */ }
+}
+
+/** Mode coba tanpa akun: akun tamu sementara berisi data contoh 2 minggu. */
+export async function masukDemo() {
+  const user = {
+    id: `demo-${buatId()}`, nama: 'Tamu', email: '', password: null,
+    target_protein: TARGET_PROTEIN, demo: true,
+  }
+  const split = ['Push', 'Pull', 'Legs', 'Rest', 'Upper', 'Lower', 'Full Body']
+  const protein = [118, 135, 142, 105, 128, 131, 150, 122, 138, 96, 140, 133, 127, 145]
+  const contoh = []
+  for (let i = 13; i >= 1; i--) {
+    if (i === 5) continue // satu hari bolong, supaya realistis
+    const d = new Date()
+    d.setDate(d.getDate() - i)
+    contoh.push({
+      id: buatId(), user_id: user.id, tanggal: tanggalLokal(d), split: split[i % 7], protein_gram: protein[i],
+      berat_badan_kg: i % 2 ? Math.round((64 + (13 - i) * 0.12) * 10) / 10 : null,
+      catatan: i === 2 ? 'PR squat 100 kg' : '', created_at: new Date().toISOString(),
+    })
+  }
+  const error = tulis(KUNCI_USER, [...baca(KUNCI_USER, []), user])
+    || tulis(KUNCI_LOG, [...baca(KUNCI_LOG, []), ...contoh])
+    || tulis(KUNCI_SESI, user.id)
+  return error ? { data: null, error } : { data: publik(user), error: null }
 }
 
 /** Ubah profil user aktif (nama dan/atau target protein). */

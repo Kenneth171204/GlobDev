@@ -3,6 +3,7 @@ import { LogOut, Mail, Target } from 'lucide-react'
 import { useAuth } from '../lib/auth.jsx'
 import { useLogs } from '../lib/useLogs.js'
 import { beratTerakhir, pesanGalat, streakTarget, validasiTarget } from '../lib/bulking.js'
+import BannerDemo from '../components/BannerDemo.jsx'
 
 export default function Profil() {
   const { user, keluar, perbaruiProfil } = useAuth()
@@ -31,26 +32,30 @@ export default function Profil() {
   }
 
   function konfirmasiKeluar() {
-    if (window.confirm('Keluar dari akun ini?')) keluar()
+    const pesan = user.demo ? 'Keluar dari mode coba? Data contoh akan dihapus.' : 'Keluar dari akun ini?'
+    if (window.confirm(pesan)) keluar()
   }
 
   return (
     <>
-      <div className="topbar">
-        <h1 className="judul-halaman">Profil</h1>
-      </div>
+      <h1 className="judul-halaman">Profil</h1>
+      <BannerDemo />
 
-      <section className="kartu-hero kartu-profil">
-        <div className="avatar avatar-besar">{user.nama.charAt(0).toUpperCase()}</div>
+      <div className="kolom-dua">
+      <section className="kartu-hero kartu-profil" aria-label="Data akun">
+        <div className="avatar avatar-besar" aria-hidden="true">{user.nama.charAt(0).toUpperCase()}</div>
         <h2>{user.nama}</h2>
-        <p><Mail size={14} strokeWidth={2.4} /> {user.email}</p>
-        <div className="hero-stat">
-          <div><small>Total log</small><strong>{logs.length}</strong></div>
-          <div><small>Latihan</small><strong>{totalLatihan}</strong></div>
-          <div><small>Streak</small><strong>{streak}<span>hr</span></strong></div>
-        </div>
+        <p>
+          {user.demo ? 'Akun mode coba' : <><Mail size={16} strokeWidth={2.4} aria-hidden="true" /> {user.email}</>}
+        </p>
+        <dl className="hero-stat">
+          <div><dt>Total log</dt><dd><strong>{logs.length}</strong> hari</dd></div>
+          <div><dt>Latihan</dt><dd><strong>{totalLatihan}</strong> kali</dd></div>
+          <div><dt>Capai target</dt><dd><strong>{streak}</strong> hari</dd><dd className="ket">berturut-turut</dd></div>
+        </dl>
       </section>
 
+      <div className="kolom">
       <section className="kartu">
         <div className="judul-kartu-baris">
           <h2 className="judul-kartu">Target protein harian</h2>
@@ -68,7 +73,8 @@ export default function Profil() {
           </div>
           {saran && (
             <p className="saran">
-              Saran bulking ±2 g/kg × {berat.berat} kg = <strong>{saran} g</strong>.{' '}
+              Saran untuk bulking: sekitar 2 g per kg berat badan × {String(berat.berat).replace('.', ',')} kg ={' '}
+              <strong>{saran} g</strong>.{' '}
               <button type="button" className="tautan" onClick={() => { setTarget(String(saran)); setBerhasil('') }}>
                 Pakai angka ini
               </button>
@@ -83,8 +89,10 @@ export default function Profil() {
       </section>
 
       <button type="button" className="tombol tombol-hitam tombol-keluar" onClick={konfirmasiKeluar}>
-        <LogOut size={20} strokeWidth={2.6} /> Keluar
+        <LogOut size={20} strokeWidth={2.6} aria-hidden="true" /> Keluar
       </button>
+      </div>
+      </div>
     </>
   )
 }

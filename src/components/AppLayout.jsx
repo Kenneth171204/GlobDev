@@ -1,10 +1,38 @@
-import { Outlet } from 'react-router-dom'
-import BottomNav from './BottomNav.jsx'
+import { Link, NavLink, Outlet } from 'react-router-dom'
+import { Plus } from 'lucide-react'
+import { useAuth } from '../lib/auth.jsx'
+import Logo from './Logo.jsx'
+import BottomNav, { MENU, useBukaFormCatat } from './BottomNav.jsx'
 
-/** Kerangka halaman setelah login: konten + bottom navigation hitam. */
+/**
+ * Kerangka semua halaman setelah login.
+ * Header sama di setiap halaman: logo, (menu di layar lebar), avatar.
+ * Di layar sempit menu ada di bottom navigation.
+ */
 export default function AppLayout() {
+  const { user } = useAuth()
+  const bukaForm = useBukaFormCatat()
+
   return (
-    <div className="app">
+    <div className="app app-masuk">
+      <header className="app-header">
+        <Link to="/" className="app-header-logo" aria-label="BulkUp, ke Beranda">
+          <Logo />
+        </Link>
+        <nav className="nav-atas" aria-label="Navigasi utama">
+          {MENU.map(({ ke, label, ikon: Ikon, end }) => (
+            <NavLink key={ke} to={ke} end={end} className="nav-atas-item">
+              <Ikon size={18} strokeWidth={2.4} aria-hidden="true" /> {label}
+            </NavLink>
+          ))}
+          <button type="button" className="tombol tombol-oranye tombol-kecil" onClick={bukaForm}>
+            <Plus size={18} strokeWidth={3} aria-hidden="true" /> Catat log
+          </button>
+        </nav>
+        <Link to="/profil" className="avatar avatar-kecil" aria-label={`Profil ${user.nama}`}>
+          {user.nama.charAt(0).toUpperCase()}
+        </Link>
+      </header>
       <main className="konten">
         <Outlet />
       </main>

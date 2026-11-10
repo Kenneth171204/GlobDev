@@ -9,8 +9,8 @@ import RingProgress from '../components/RingProgress.jsx'
 import LineChart from '../components/LineChart.jsx'
 
 const RENTANG = [
-  { hari: 7, label: 'Minggu' },
-  { hari: 30, label: 'Bulan' },
+  { hari: 7, label: '7 hari' },
+  { hari: 30, label: '30 hari' },
 ]
 
 export default function Statistik() {
@@ -35,10 +35,10 @@ export default function Statistik() {
 
   return (
     <>
-      <div className="topbar">
-        <h1 className="judul-halaman">Statistik</h1>
-      </div>
+      <h1 className="judul-halaman">Statistik</h1>
 
+      <div className="kolom-dua">
+      <div className="kolom">
       <section className="kartu kartu-ring">
         <RingProgress nilai={hariIni} maks={target} ukuran={230} tebal={20}
           label={`Protein hari ini ${hariIni} dari ${target} gram`}>
@@ -46,16 +46,30 @@ export default function Statistik() {
         </RingProgress>
         <p className="ring-angka">{hariIni}<span> / {target} g</span></p>
         <p className="ring-sub">
-          {sisa > 0 ? `Protein hari ini — kurang ${sisa} g lagi untuk capai target.` : 'Target protein hari ini tercapai! 🎉'}
+          {sisa > 0 ? `Protein hari ini. Kurang ${sisa} g lagi untuk mencapai target.` : 'Target protein hari ini tercapai! 🎉'}
         </p>
       </section>
 
-      <section className="strip-hitam">
-        <div><Flame size={20} strokeWidth={2.6} /><strong>{rata}<small>g</small></strong><span>rata-rata 7 hr</span></div>
-        <div><Dumbbell size={20} strokeWidth={2.6} /><strong>{latihan}<small>×</small></strong><span>latihan mgg ini</span></div>
-        <div><Trophy size={20} strokeWidth={2.6} /><strong>{streak}<small>hr</small></strong><span>streak target</span></div>
+      <section className="strip-hitam" aria-label="Ringkasan">
+        <div>
+          <Flame size={20} strokeWidth={2.6} aria-hidden="true" />
+          <strong>{rata}<small> g</small></strong>
+          <span>rata-rata protein 7 hari terakhir</span>
+        </div>
+        <div>
+          <Dumbbell size={20} strokeWidth={2.6} aria-hidden="true" />
+          <strong>{latihan}<small> hari</small></strong>
+          <span>latihan minggu ini</span>
+        </div>
+        <div>
+          <Trophy size={20} strokeWidth={2.6} aria-hidden="true" />
+          <strong>{streak}<small> hari</small></strong>
+          <span>berturut-turut capai target</span>
+        </div>
       </section>
+      </div>
 
+      <div className="kolom">
       <div className="segmen" role="tablist" aria-label="Rentang waktu">
         {RENTANG.map((r) => (
           <button key={r.hari} type="button" role="tab" aria-selected={rentang === r.hari}
@@ -104,6 +118,8 @@ export default function Statistik() {
           </>
         )}
       </section>
+      </div>
+      </div>
     </>
   )
 }
