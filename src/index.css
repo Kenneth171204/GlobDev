@@ -310,6 +310,8 @@ fieldset.isian { border: 0; padding: 0; margin: 0; min-width: 0; }
 .galat { padding: 12px 14px; border-radius: var(--radius-s); background: #fdecea; color: var(--merah); font-size: 14px; font-weight: 600; }
 .berhasil { padding: 12px 14px; border-radius: var(--radius-s); background: #ecfccb; color: #3f6212; font-size: 14px; font-weight: 700; margin-top: 12px; }
 .form .berhasil { margin-top: 0; }
+.info-konfirmasi { font-size: 16px; line-height: 1.6; }
+.layar-memuat { max-width: 440px; margin: 40vh auto 0; }
 .saran { font-size: 14px; color: var(--redup); background: var(--latar); padding: 10px 12px; border-radius: var(--radius-s); }
 .saran strong { color: var(--hitam); }
 

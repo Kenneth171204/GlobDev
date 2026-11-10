@@ -28,16 +28,25 @@ Semua halaman setelah login memakai header yang sama (logo + avatar). Di ponsel,
 - Logo BulkUp dan ilustrasi onboarding digambar sendiri dengan SVG (`src/components/Logo.jsx`, `src/pages/Onboarding.jsx`). Ikon lain dari `lucide-react`.
 - Grafik dan ring progres dibuat dengan SVG sendiri, tanpa library chart.
 
-### Penyimpanan: localStorage (mode demo)
+### Penyimpanan: Supabase
 
-Untuk sementara semua data (akun, sesi login, dan log) disimpan di `localStorage` browser lewat `src/lib/db.js`. Tidak perlu setup apa pun.
+Akun dan log disimpan di Supabase (project **GlobDev**, region ap-southeast-2).
 
-- Kunci yang dipakai: `gerak_users`, `gerak_sesi`, `gerak_logs`.
-- Data hanya ada di browser dan perangkat itu. Membuka di browser lain atau mode incognito berarti mulai dari kosong.
-- Password di-hash (SHA-256) sebelum disimpan, tapi ini **bukan** keamanan sungguhan. Jangan pakai password asli.
-- Untuk mengosongkan data: DevTools → Application → Local Storage → hapus tiga kunci di atas.
+- **Akun:** Supabase Auth (email + password).
+- **Tabel** (skema lengkap di `supabase/schema.sql`):
 
-Semua fungsi di `db.js` mengembalikan `{ data, error }`, jadi nanti bisa diganti ke Supabase tanpa mengubah halaman. Skema tabel untuk tahap itu sudah ada di `supabase/schema.sql`.
+| Tabel | Isi | Catatan |
+|---|---|---|
+| `profil` | `id` (= user Auth), `nama`, `target_protein` (50–400 g, default 130), `created_at`, `updated_at` | Dibuat otomatis oleh trigger `saat_user_baru` saat daftar |
+| `log_harian` | `id`, `user_id`, `tanggal`, `split`, `protein_gram` (0–500), `berat_badan_kg` (20–300, opsional), `catatan` (≤ 200), `created_at` | Unik per `(user_id, tanggal)` |
+
+  Menghapus akun di Supabase Auth ikut menghapus profil dan semua log-nya.
+- **Keamanan:** Row Level Security aktif di kedua tabel; setiap user hanya bisa membaca dan mengubah profil serta log miliknya sendiri. Fungsi trigger ada di schema `private` yang tidak terekspos lewat API. Frontend hanya memegang *publishable key*, yang memang aman ada di browser.
+- **Mode coba** tetap memakai `localStorage` (kunci `bulkup_demo`) dan dihapus saat keluar, jadi tidak membuat akun di Supabase.
+
+Kode: `src/lib/supabase.js` (client), `src/lib/db.js` (semua akses data, `{ data, error }`), `src/lib/db-demo.js` (mode coba).
+
+**Konfirmasi email:** kalau "Confirm email" di Supabase (Authentication → Sign In / Providers → Email) masih aktif, user baru diminta membuka link di email sebelum bisa masuk. Matikan opsi itu kalau ingin langsung masuk setelah daftar.
 
 ## Menjalankan
 
@@ -45,6 +54,7 @@ Butuh Node.js 20.19 atau lebih baru (`node -v`).
 
 ```
 npm install
+cp .env.example .env   # lalu isi URL dan publishable key Supabase
 npm run dev
 ```
 
@@ -54,7 +64,7 @@ Buka `http://localhost:5173`, lalu daftar akun baru.
 
 Live: **https://bulkup.pages.dev** (project Cloudflare Pages `bulkup`).
 
-Untuk deploy ulang setelah ada perubahan (butuh `npx wrangler login` sekali):
+Untuk deploy ulang setelah ada perubahan (butuh `npx wrangler login` sekali). Nilai di `.env` ikut dibundel saat `npm run build`, jadi pastikan `.env` sudah terisi:
 
 ```
 npm run build
@@ -85,8 +95,10 @@ src/
 └── lib/
     ├── auth.jsx            Context login + proteksi rute
     ├── bulking.js          Target, split, validasi, perhitungan ringkasan & grafik
-    ├── db.js               Penyimpanan localStorage (akun, sesi, CRUD log, profil)
+    ├── db.js               Akses data: Supabase (Auth, tabel profil & log_harian) atau mode coba
+    ├── db-demo.js          Mode coba (localStorage)
+    ├── supabase.js         Client Supabase
     └── useLogs.js          Hook memuat log user
 ```
 
-`supabase/schema.sql` adalah skema untuk tahap berikutnya (belum dipakai). `src/lib/ringkasan.js` dan `src/data/contoh.js` adalah sisa latihan sesi 1 dan tidak dipakai aplikasi.
+`supabase/schema.sql` adalah skema tabel `profil` dan `log_harian` + RLS + trigger yang sudah diterapkan ke Supabase. `src/lib/ringkasan.js` dan `src/data/contoh.js` adalah sisa latihan sesi 1 dan tidak dipakai aplikasi.

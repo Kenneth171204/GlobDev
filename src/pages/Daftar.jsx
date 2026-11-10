@@ -13,6 +13,7 @@ export default function Daftar() {
   const [galat, setGalat] = useState({})
   const [galatServer, setGalatServer] = useState('')
   const [mengirim, setMengirim] = useState(false)
+  const [info, setInfo] = useState('')
 
   async function kirim(e) {
     e.preventDefault()
@@ -26,10 +27,26 @@ export default function Daftar() {
     if (Object.keys(g).length > 0) return
 
     setMengirim(true)
-    const error = await daftar({ nama, email, password })
+    const { error, perluKonfirmasi } = await daftar({ nama, email, password })
     setMengirim(false)
     if (error) setGalatServer(pesanGalat(error))
-    // Berhasil → langsung login dan RuteTamu mengarahkan ke Beranda.
+    else if (perluKonfirmasi) setInfo(email.trim())
+    // Berhasil tanpa konfirmasi → langsung login dan RuteTamu mengarahkan ke Beranda.
+  }
+
+  if (info) {
+    return (
+      <AuthLayout
+        judul="Cek email-mu"
+        subjudul="Satu langkah lagi sebelum mulai."
+        bawah={<>Sudah konfirmasi? <Link to="/masuk">Masuk</Link></>}
+      >
+        <p className="info-konfirmasi">
+          Kami mengirim link konfirmasi ke <strong>{info}</strong>. Buka email itu dan klik linknya,
+          lalu masuk dengan email dan password yang tadi kamu buat.
+        </p>
+      </AuthLayout>
+    )
   }
 
   return (

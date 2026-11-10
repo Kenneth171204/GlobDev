@@ -1,39 +1,67 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { Navigate } from 'react-router-dom'
+import { supabase } from './supabase.js'
 import * as db from './db.js'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => db.userAktif())
+  // Mode coba langsung tersedia dari localStorage; akun Supabase menunggu getSession().
+  const [user, setUser] = useState(() => db.userDemo())
+  const [memuat, setMemuat] = useState(() => db.userDemo() === null)
 
-  // Ikuti login/keluar dari tab browser lain.
+  const idTermuat = useRef(null)
+
   useEffect(() => {
-    const sinkron = () => setUser(db.userAktif())
-    window.addEventListener('storage', sinkron)
-    return () => window.removeEventListener('storage', sinkron)
+    // Ikuti sesi awal, login, dan keluar (juga dari tab lain).
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      if (db.userDemo()) return setMemuat(false)
+      const authUser = session?.user ?? null
+      if (!authUser) {
+        idTermuat.current = null
+        setUser(null)
+        return setMemuat(false)
+      }
+      // Refresh token / user yang sama sudah termuat → tidak perlu ambil profil lagi.
+      if (event === 'TOKEN_REFRESHED' || idTermuat.current === authUser.id) return setMemuat(false)
+      // Panggilan Supabase di dalam callback ini bisa deadlock → tunda ke tick berikutnya.
+      setTimeout(async () => {
+        const { data: userApp } = await db.muatUser(authUser)
+        idTermuat.current = authUser.id
+        setUser(userApp)
+        setMemuat(false)
+      }, 0)
+    })
+    return () => data.subscription.unsubscribe()
   }, [])
 
+  /** Mengembalikan { error, perluKonfirmasi }. */
+  function pakaiUser(data) {
+    idTermuat.current = data.id
+    setUser(data)
+  }
+
   async function daftar(isian) {
-    const { data, error } = await db.daftar(isian)
-    if (data) setUser(data)
-    return error
+    const { data, error, perluKonfirmasi } = await db.daftar(isian)
+    if (data) pakaiUser(data)
+    return { error, perluKonfirmasi }
   }
 
   async function masuk(isian) {
     const { data, error } = await db.masuk(isian)
-    if (data) setUser(data)
+    if (data) pakaiUser(data)
     return error
   }
 
   async function masukDemo() {
-    const { data, error } = await db.masukDemo()
+    const { data, error } = db.masukDemo()
     if (data) setUser(data)
     return error
   }
 
-  function keluar() {
-    db.keluar()
+  async function keluar() {
+    await db.keluar()
+    idTermuat.current = null
     setUser(null)
   }
 
@@ -43,19 +71,31 @@ export function AuthProvider({ children }) {
     return error
   }
 
-  return <AuthContext.Provider value={{ user, daftar, masuk, masukDemo, keluar, perbaruiProfil }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, memuat, daftar, masuk, masukDemo, keluar, perbaruiProfil }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {
   return useContext(AuthContext)
 }
 
-/** Halaman yang wajib login (Beranda, Ubah). */
-export function RuteLogin({ children }) {
-  return useAuth().user ? children : <Navigate to="/selamat-datang" replace />
+function Memuat() {
+  return <p className="status layar-memuat">Memuat…</p>
 }
 
-/** Halaman untuk tamu (Daftar, Masuk): kalau sudah login, langsung ke Beranda. */
+/** Halaman yang wajib login. */
+export function RuteLogin({ children }) {
+  const { user, memuat } = useAuth()
+  if (memuat) return <Memuat />
+  return user ? children : <Navigate to="/selamat-datang" replace />
+}
+
+/** Halaman untuk tamu (Onboarding, Daftar, Masuk): kalau sudah login, langsung ke Beranda. */
 export function RuteTamu({ children }) {
-  return useAuth().user ? <Navigate to="/" replace /> : children
+  const { user, memuat } = useAuth()
+  if (memuat) return <Memuat />
+  return user ? <Navigate to="/" replace /> : children
 }

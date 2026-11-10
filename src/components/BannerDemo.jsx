@@ -7,8 +7,8 @@ export default function BannerDemo() {
   const navigate = useNavigate()
   if (!user?.demo) return null
 
-  function daftar() {
-    keluar()
+  async function daftar() {
+    await keluar()
     navigate('/daftar')
   }
 
