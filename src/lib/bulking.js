@@ -113,10 +113,21 @@ export function keIsianForm(log) {
   }
 }
 
-/** Teks galat untuk ditampilkan ke user. */
+/** Teks galat (termasuk dari Supabase) dalam Bahasa Indonesia. */
 export function pesanGalat(error) {
   if (!error) return ''
-  return error.message || 'Terjadi kesalahan. Coba lagi.'
+  if (error.code === '23505') return 'Log untuk tanggal ini sudah ada. Ubah log yang sudah ada saja.'
+  if (error.code === '23514') return 'Ada isian di luar batas yang diizinkan. Periksa lagi angkanya.'
+  const m = error.message || ''
+  if (/invalid login credentials/i.test(m)) return 'Email atau password salah.'
+  if (/already registered|already exists/i.test(m)) return 'Email sudah terdaftar. Silakan masuk.'
+  if (/password should be at least/i.test(m)) return 'Password minimal 6 karakter.'
+  if (/email not confirmed/i.test(m)) return 'Email belum dikonfirmasi. Buka link konfirmasi di email-mu dulu.'
+  if (/rate limit|too many/i.test(m)) return 'Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi.'
+  if (/invalid.*email|email.*invalid/i.test(m)) return 'Alamat email tidak valid.'
+  if (/jwt|session.*(missing|expired)|not authenticated/i.test(m)) return 'Sesi berakhir. Silakan masuk lagi.'
+  if (/failed to fetch|network|load failed/i.test(m)) return 'Tidak bisa terhubung ke server. Cek koneksi internet.'
+  return m || 'Terjadi kesalahan. Coba lagi.'
 }
 
 /** Warna aksen per split (dipakai badge dan ikon kartu). */

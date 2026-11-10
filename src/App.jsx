@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, RuteLogin, RuteTamu } from './lib/auth.jsx'
+import { supabaseSiap } from './lib/supabase.js'
 import AppLayout from './components/AppLayout.jsx'
 import Onboarding from './pages/Onboarding.jsx'
 import Daftar from './pages/Daftar.jsx'
@@ -10,6 +11,20 @@ import Profil from './pages/Profil.jsx'
 import Ubah from './pages/Ubah.jsx'
 
 export default function App() {
+  if (!supabaseSiap) {
+    return (
+      <main className="app konten">
+        <section className="kartu" style={{ marginTop: 32 }}>
+          <h1 className="judul-kartu">Supabase belum disambungkan</h1>
+          <p>
+            Salin <code>.env.example</code> menjadi <code>.env</code>, isi <code>VITE_SUPABASE_URL</code> dan{' '}
+            <code>VITE_SUPABASE_PUBLISHABLE_KEY</code>, lalu jalankan ulang <code>npm run dev</code>.
+          </p>
+        </section>
+      </main>
+    )
+  }
+
   return (
     <AuthProvider>
       <BrowserRouter>

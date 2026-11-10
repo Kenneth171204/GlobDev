@@ -1,190 +1,112 @@
-// Penyimpanan lokal (localStorage) untuk Fase 1 — pengganti sementara Supabase.
-// Semua fungsi async dan mengembalikan { data, error } supaya nanti mudah
-// diganti ke Supabase tanpa mengubah halaman.
-//
-// Catatan: ini simulasi untuk demo. Data hanya ada di browser ini, dan siapa pun
-// yang memakai browser yang sama bisa membacanya lewat DevTools.
+// Lapisan data BulkUp.
+// - Akun sungguhan → Supabase (Auth + tabel `profil` dan `log_harian`, keduanya dengan RLS).
+// - Mode coba      → localStorage lewat db-demo.js.
+// Semua fungsi mengembalikan { data, error } supaya halaman tidak perlu tahu bedanya.
 
-import { TARGET_PROTEIN, tanggalLokal } from './bulking.js'
+import { supabase } from './supabase.js'
+import * as demo from './db-demo.js'
+import { TARGET_PROTEIN } from './bulking.js'
 
-const KUNCI_USER = 'gerak_users'
-const KUNCI_SESI = 'gerak_sesi'
-const KUNCI_LOG = 'gerak_logs'
+const modeDemo = () => demo.userDemo() !== null
 
-function baca(kunci, cadangan) {
-  try {
-    const teks = localStorage.getItem(kunci)
-    return teks ? JSON.parse(teks) : cadangan
-  } catch {
-    return cadangan
-  }
-}
-
-function tulis(kunci, nilai) {
-  try {
-    localStorage.setItem(kunci, JSON.stringify(nilai))
-    return null
-  } catch {
-    return { message: 'Penyimpanan browser penuh atau diblokir.' }
-  }
-}
-
-function buatId() {
-  return crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
-}
-
-/** Hash password (SHA-256) supaya tidak tersimpan sebagai teks biasa. */
-async function hash(teks) {
-  if (!crypto.subtle) return teks // konteks tidak aman (http non-localhost): simpan apa adanya
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(teks))
-  return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, '0')).join('')
-}
-
-function publik(user) {
+/** Gabungkan user Supabase Auth + baris tabel profil → bentuk user yang dipakai aplikasi. */
+function keUserApp(authUser, profil) {
   return {
-    id: user.id,
-    nama: user.nama,
-    email: user.email,
-    target_protein: user.target_protein ?? TARGET_PROTEIN,
-    demo: Boolean(user.demo),
+    id: authUser.id,
+    nama: profil?.nama || authUser.user_metadata?.nama || authUser.email?.split('@')[0] || 'Kamu',
+    email: authUser.email ?? '',
+    target_protein: profil?.target_protein ?? TARGET_PROTEIN,
+    demo: false,
   }
+}
+
+/**
+ * Ambil profil user yang sedang login dari tabel `profil`.
+ * Baris profil dibuat otomatis oleh trigger saat daftar; kalau tidak ada
+ * (mis. akun dibuat sebelum trigger dipasang), buat sekarang.
+ */
+export async function muatUser(authUser) {
+  if (!authUser) return { data: null, error: null }
+  let { data: profil, error } = await supabase.from('profil').select('nama, target_protein').eq('id', authUser.id).maybeSingle()
+  if (!error && !profil) {
+    const nama = (authUser.user_metadata?.nama || authUser.email?.split('@')[0] || 'Kamu').slice(0, 80)
+    ;({ data: profil, error } = await supabase.from('profil')
+      .insert({ id: authUser.id, nama }).select('nama, target_protein').single())
+  }
+  return { data: keUserApp(authUser, profil), error }
 }
 
 // ---------- Autentikasi ----------
 
-export function userAktif() {
-  const id = baca(KUNCI_SESI, null)
-  const user = id && baca(KUNCI_USER, []).find((u) => u.id === id)
-  return user ? publik(user) : null
-}
-
 export async function daftar({ nama, email, password }) {
-  const users = baca(KUNCI_USER, [])
-  const emailRapi = email.trim().toLowerCase()
-  if (users.some((u) => u.email === emailRapi)) {
+  const { data, error } = await supabase.auth.signUp({
+    email: email.trim(),
+    password,
+    options: { data: { nama: nama.trim(), target_protein: TARGET_PROTEIN } },
+  })
+  if (error) return { data: null, error }
+  // Supabase membalas "berhasil" tanpa identitas kalau email sudah terdaftar (perlindungan enumerasi).
+  if (data.user && data.user.identities?.length === 0) {
     return { data: null, error: { message: 'Email sudah terdaftar. Silakan masuk.' } }
   }
-  const user = {
-    id: buatId(),
-    nama: nama.trim(),
-    email: emailRapi,
-    password: await hash(password),
-    target_protein: TARGET_PROTEIN,
-  }
-  const error = tulis(KUNCI_USER, [...users, user]) || tulis(KUNCI_SESI, user.id)
-  return error ? { data: null, error } : { data: publik(user), error: null }
+  // Tanpa session = konfirmasi email masih aktif di dashboard Supabase.
+  if (!data.session) return { data: null, error: null, perluKonfirmasi: true }
+  return muatUser(data.user)
 }
 
 export async function masuk({ email, password }) {
-  const emailRapi = email.trim().toLowerCase()
-  const kata = await hash(password)
-  const user = baca(KUNCI_USER, []).find((u) => u.email === emailRapi && u.password === kata)
-  if (!user) return { data: null, error: { message: 'Email atau password salah.' } }
-  const error = tulis(KUNCI_SESI, user.id)
-  return error ? { data: null, error } : { data: publik(user), error: null }
-}
-
-export function keluar() {
-  // Akun mode coba dibuang beserta datanya supaya tidak menumpuk.
-  const user = userAktif()
-  if (user?.demo) {
-    tulis(KUNCI_USER, baca(KUNCI_USER, []).filter((u) => u.id !== user.id))
-    tulis(KUNCI_LOG, baca(KUNCI_LOG, []).filter((l) => l.user_id !== user.id))
-  }
-  try { localStorage.removeItem(KUNCI_SESI) } catch { /* abaikan */ }
-}
-
-/** Mode coba tanpa akun: akun tamu sementara berisi data contoh 2 minggu. */
-export async function masukDemo() {
-  const user = {
-    id: `demo-${buatId()}`, nama: 'Tamu', email: '', password: null,
-    target_protein: TARGET_PROTEIN, demo: true,
-  }
-  const split = ['Push', 'Pull', 'Legs', 'Rest', 'Upper', 'Lower', 'Full Body']
-  const protein = [118, 135, 142, 105, 128, 131, 150, 122, 138, 96, 140, 133, 127, 145]
-  const contoh = []
-  for (let i = 13; i >= 1; i--) {
-    if (i === 5) continue // satu hari bolong, supaya realistis
-    const d = new Date()
-    d.setDate(d.getDate() - i)
-    contoh.push({
-      id: buatId(), user_id: user.id, tanggal: tanggalLokal(d), split: split[i % 7], protein_gram: protein[i],
-      berat_badan_kg: i % 2 ? Math.round((64 + (13 - i) * 0.12) * 10) / 10 : null,
-      catatan: i === 2 ? 'PR squat 100 kg' : '', created_at: new Date().toISOString(),
-    })
-  }
-  const error = tulis(KUNCI_USER, [...baca(KUNCI_USER, []), user])
-    || tulis(KUNCI_LOG, [...baca(KUNCI_LOG, []), ...contoh])
-    || tulis(KUNCI_SESI, user.id)
-  return error ? { data: null, error } : { data: publik(user), error: null }
-}
-
-/** Ubah profil user aktif (nama dan/atau target protein). */
-export async function ubahProfil(perubahan) {
-  const { user, error } = wajibLogin()
+  const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
   if (error) return { data: null, error }
-  const users = baca(KUNCI_USER, [])
-  const i = users.findIndex((u) => u.id === user.id)
-  users[i] = { ...users[i], ...perubahan }
-  const galat = tulis(KUNCI_USER, users)
-  return galat ? { data: null, error: galat } : { data: publik(users[i]), error: null }
+  return muatUser(data.user)
+}
+
+export const masukDemo = demo.masukDemo
+export const userDemo = demo.userDemo
+
+export async function keluar() {
+  if (modeDemo()) return demo.keluarDemo()
+  await supabase.auth.signOut()
+}
+
+/** Ubah profil (nama / target protein) → tabel `profil`. */
+export async function ubahProfil(perubahan) {
+  if (modeDemo()) return demo.ubahProfil(perubahan)
+  const { data: sesi } = await supabase.auth.getUser()
+  if (!sesi?.user) return { data: null, error: { message: 'Sesi berakhir. Silakan masuk lagi.' } }
+  const { data: profil, error } = await supabase.from('profil')
+    .update(perubahan).eq('id', sesi.user.id).select('nama, target_protein').single()
+  return error ? { data: null, error } : { data: keUserApp(sesi.user, profil), error: null }
 }
 
 // ---------- Log Harian (CRUD) ----------
 
-function wajibLogin() {
-  const user = userAktif()
-  return user ? { user } : { error: { message: 'Sesi berakhir. Silakan masuk lagi.' } }
-}
-
-const GALAT_TANGGAL_GANDA = { message: 'Log untuk tanggal ini sudah ada. Ubah log yang sudah ada saja.' }
-
-/** Semua log milik user aktif, terbaru di atas. */
 export async function ambilLogs() {
-  const { user, error } = wajibLogin()
-  if (error) return { data: null, error }
-  const data = baca(KUNCI_LOG, [])
-    .filter((l) => l.user_id === user.id)
-    .sort((a, b) => b.tanggal.localeCompare(a.tanggal))
-  return { data, error: null }
+  if (modeDemo()) return demo.ambilLogs()
+  return supabase.from('log_harian').select('*').order('tanggal', { ascending: false })
 }
 
 export async function ambilLog(id) {
-  const { user, error } = wajibLogin()
-  if (error) return { data: null, error }
-  const log = baca(KUNCI_LOG, []).find((l) => l.id === id && l.user_id === user.id)
-  return { data: log ?? null, error: null }
+  if (modeDemo()) return demo.ambilLog(id)
+  const { data, error } = await supabase.from('log_harian').select('*').eq('id', id).maybeSingle()
+  // id yang bukan UUID valid (22P02) dianggap "tidak ditemukan".
+  if (error?.code === '22P02') return { data: null, error: null }
+  return { data, error }
 }
 
 export async function tambahLog(baris) {
-  const { user, error } = wajibLogin()
-  if (error) return { data: null, error }
-  const semua = baca(KUNCI_LOG, [])
-  if (semua.some((l) => l.user_id === user.id && l.tanggal === baris.tanggal)) {
-    return { data: null, error: GALAT_TANGGAL_GANDA }
-  }
-  const log = { id: buatId(), user_id: user.id, ...baris, created_at: new Date().toISOString() }
-  const galat = tulis(KUNCI_LOG, [...semua, log])
-  return galat ? { data: null, error: galat } : { data: log, error: null }
+  if (modeDemo()) return demo.tambahLog(baris)
+  return supabase.from('log_harian').insert(baris).select().single()
 }
 
 export async function ubahLog(id, baris) {
-  const { user, error } = wajibLogin()
-  if (error) return { data: null, error }
-  const semua = baca(KUNCI_LOG, [])
-  const i = semua.findIndex((l) => l.id === id && l.user_id === user.id)
-  if (i === -1) return { data: null, error: { message: 'Log tidak ditemukan.' } }
-  if (semua.some((l) => l.id !== id && l.user_id === user.id && l.tanggal === baris.tanggal)) {
-    return { data: null, error: GALAT_TANGGAL_GANDA }
-  }
-  semua[i] = { ...semua[i], ...baris }
-  const galat = tulis(KUNCI_LOG, semua)
-  return galat ? { data: null, error: galat } : { data: semua[i], error: null }
+  if (modeDemo()) return demo.ubahLog(id, baris)
+  const { data, error } = await supabase.from('log_harian').update(baris).eq('id', id).select().maybeSingle()
+  if (!error && !data) return { data: null, error: { message: 'Log tidak ditemukan.' } }
+  return { data, error }
 }
 
 export async function hapusLog(id) {
-  const { user, error } = wajibLogin()
-  if (error) return { error }
-  const semua = baca(KUNCI_LOG, [])
-  return { error: tulis(KUNCI_LOG, semua.filter((l) => !(l.id === id && l.user_id === user.id))) }
+  if (modeDemo()) return demo.hapusLog(id)
+  const { error } = await supabase.from('log_harian').delete().eq('id', id)
+  return { error }
 }
