@@ -8,19 +8,22 @@ Satu data utama: **Log Harian** (tanggal, split, protein, berat badan opsional, 
 
 | Halaman | URL | Isi |
 |---|---|---|
-| Onboarding | `/selamat-datang` | Judul besar "BULK UP", ilustrasi, tombol Try It Now |
+| Onboarding | `/selamat-datang` | Judul besar "BULK UP", ilustrasi, tombol **Daftar gratis** dan **Coba tanpa akun** |
 | Daftar | `/daftar` | Nama, email, password |
 | Masuk | `/masuk` | Email, password |
-| Beranda | `/` | Kartu ringkasan, form catat log, riwayat log (ubah/hapus) |
+| Beranda | `/` | Satu kartu ringkasan, form catat log (langsung di bawahnya), riwayat log (ubah/hapus) |
 | Statistik | `/statistik` | Ring progres protein hari ini, grafik protein & berat (minggu/bulan), komposisi split |
 | Profil | `/profil` | Nama, email, edit target protein, tombol Keluar |
 | Ubah | `/ubah/:id` | Form yang sudah terisi, Simpan perubahan / Batal |
 
-Halaman setelah login memakai **bottom navigation** hitam: Beranda, tombol **+** (lompat ke form catat), Statistik, Profil.
+Semua halaman setelah login memakai header yang sama (logo + avatar). Di ponsel, menu ada di **bottom navigation** hitam (Beranda, tombol **+** untuk lompat ke form, Statistik, Profil); di layar ≥ 960px menu pindah ke header dan halaman memakai tata letak dua kolom.
+
+**Mode coba tanpa akun:** tombol "Coba tanpa akun" membuat akun tamu sementara berisi data contoh 2 minggu. Data itu dihapus otomatis saat keluar.
 
 ### Desain
 
 - Warna: oranye `#FF5A1F`, biru `#1F6BFF`, hijau stabilo `#C8F31D`, hitam `#141414`, putih. Semua ada sebagai variabel CSS di awal `src/index.css`.
+- Kontras dicek dengan rumus WCAG 2.1: teks putih hanya di atas oranye tua (`#D2460E`–`#B93A0A`, ≥ 4.5:1) atau biru tombol (`#2563EB`–`#1A56DB`); oranye terang hanya untuk dekorasi dan ikon. Teks di atas hijau stabilo selalu hitam (14:1).
 - Font Poppins (Google Fonts), kartu bersudut bulat dengan bayangan lembut.
 - Logo BulkUp dan ilustrasi onboarding digambar sendiri dengan SVG (`src/components/Logo.jsx`, `src/pages/Onboarding.jsx`). Ikon lain dari `lucide-react`.
 - Grafik dan ring progres dibuat dengan SVG sendiri, tanpa library chart.
@@ -67,8 +70,9 @@ src/
 ├── App.jsx                 Routing semua halaman
 ├── index.css               Design system (warna, kartu, tombol, nav, grafik)
 ├── components/
-│   ├── AppLayout.jsx       Kerangka setelah login + bottom nav
+│   ├── AppLayout.jsx       Header bersama + menu desktop + bottom nav
 │   ├── AuthLayout.jsx      Kerangka Daftar/Masuk + input berikon
+│   ├── BannerDemo.jsx      Pengingat mode coba
 │   ├── BottomNav.jsx       Navigasi bawah hitam
 │   ├── FormLog.jsx         Form log (Beranda & Ubah)
 │   ├── LineChart.jsx       Grafik garis SVG

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { ArrowRight, CalendarCheck, Check, Flame, Pencil, Trash2 } from 'lucide-react'
+import { ChartColumn, Pencil, Trash2 } from 'lucide-react'
 import * as db from '../lib/db.js'
 import { useAuth } from '../lib/auth.jsx'
 import { useLogs } from '../lib/useLogs.js'
@@ -8,10 +8,9 @@ import {
   WARNA_SPLIT, beratTerakhir, formatTanggal, hariLatihanMingguIni, keBarisLog,
   pesanGalat, proteinHariIni, rataProtein7Hari,
 } from '../lib/bulking.js'
-import Logo from '../components/Logo.jsx'
 import FormLog from '../components/FormLog.jsx'
-import RingProgress from '../components/RingProgress.jsx'
 import SplitIkon from '../components/SplitIkon.jsx'
+import BannerDemo from '../components/BannerDemo.jsx'
 
 export default function Beranda() {
   const { user } = useAuth()
@@ -22,11 +21,18 @@ export default function Beranda() {
   const refProtein = useRef(null)
   const { state } = useLocation()
 
-  // Tombol + di bottom nav → gulir ke form dan fokus ke isian protein.
+  // Tombol "Catat" (bottom nav / header) → gulir ke form dan fokus ke isian protein.
   useEffect(() => {
     if (!state?.tambah) return
-    refForm.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    setTimeout(() => refProtein.current?.focus({ preventScroll: true }), 350)
+    const form = refForm.current
+    const halus = !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    form?.scrollIntoView({ behavior: halus ? 'smooth' : 'auto', block: 'start' })
+    const t = setTimeout(() => {
+      // Cadangan: kalau browser tidak menjalankan smooth scroll, lompat langsung.
+      if (form && form.getBoundingClientRect().top > window.innerHeight / 2) form.scrollIntoView({ block: 'start' })
+      refProtein.current?.focus({ preventScroll: true })
+    }, 450)
+    return () => clearTimeout(t)
   }, [state?.tambah])
 
   async function tambah(isian) {
@@ -46,6 +52,7 @@ export default function Beranda() {
   }
 
   const hariIni = proteinHariIni(logs)
+  const persen = Math.min(100, Math.round((hariIni / target) * 100))
   const sisa = Math.max(0, target - hariIni)
   const { rata, jumlahHari } = rataProtein7Hari(logs)
   const latihan = hariLatihanMingguIni(logs)
@@ -53,66 +60,63 @@ export default function Beranda() {
 
   return (
     <>
-      <div className="topbar">
-        <Logo />
-        <Link to="/profil" className="avatar avatar-kecil" aria-label="Profil">
-          {user.nama.charAt(0).toUpperCase()}
-        </Link>
+      <BannerDemo />
+
+      <div className="beranda-atas">
+        {/* Satu kartu ringkasan: setiap angka hanya muncul sekali */}
+        <section className="kartu-hero" aria-labelledby="sapaan">
+          <p className="hero-kecil">Selamat datang kembali</p>
+          <h1 id="sapaan">Halo, {user.nama.split(' ')[0]}! 👋</h1>
+
+          <div className="hero-protein">
+            <div className="hero-protein-atas">
+              <span>Protein hari ini</span>
+              <strong>{hariIni}<small> / {target} g</small></strong>
+            </div>
+            <div className="bar-progres" role="progressbar" aria-valuenow={persen} aria-valuemin="0"
+              aria-valuemax="100" aria-label="Progres protein hari ini">
+              <span style={{ width: `${persen}%` }} />
+            </div>
+            <p>{sisa > 0 ? `Kurang ${sisa} g lagi untuk mencapai target.` : 'Target protein hari ini tercapai! 🎉'}</p>
+          </div>
+
+          <dl className="hero-stat">
+            <div>
+              <dt>Latihan</dt>
+              <dd><strong>{latihan}</strong> hari</dd>
+              <dd className="ket">minggu ini</dd>
+            </div>
+            <div>
+              <dt>Rata-rata protein</dt>
+              <dd><strong>{rata}</strong> g</dd>
+              <dd className="ket">{jumlahHari > 0 ? `${jumlahHari} hari tercatat` : '7 hari terakhir'}</dd>
+            </div>
+            <div>
+              <dt>Berat badan</dt>
+              <dd><strong>{berat ? String(berat.berat).replace('.', ',') : '–'}</strong>{berat && ' kg'}</dd>
+              <dd className="ket">
+                {berat?.selisih != null
+                  ? `${berat.selisih > 0 ? '+' : ''}${String(berat.selisih).replace('.', ',')} kg dari sebelumnya`
+                  : 'terakhir dicatat'}
+              </dd>
+            </div>
+          </dl>
+
+          <Link to="/statistik" className="tombol-pil">
+            <ChartColumn size={16} strokeWidth={2.6} aria-hidden="true" /> Lihat statistik lengkap
+          </Link>
+        </section>
+
+        <section className="kartu kartu-form" ref={refForm} id="tambah" aria-labelledby="judul-catat">
+          <h2 className="judul-kartu" id="judul-catat">Catat hari ini</h2>
+          <FormLog ref={refProtein} labelSimpan="Simpan log" onSimpan={tambah} kosongkanSetelahSimpan />
+          {berhasil && <p className="berhasil" role="status">{berhasil}</p>}
+        </section>
       </div>
 
-      {/* Hero oranye */}
-      <section className="kartu-hero">
-        <p className="hero-kecil">Selamat datang kembali</p>
-        <h1>Halo, {user.nama.split(' ')[0]}! 👋</h1>
-        <div className="hero-stat">
-          <div><small>Berat</small><strong>{berat ? berat.berat : '–'}<span>kg</span></strong></div>
-          <div><small>Protein</small><strong>{hariIni}<span>g</span></strong></div>
-          <div><small>Latihan</small><strong>{latihan}<span>×/mgg</span></strong></div>
-        </div>
-      </section>
-
-      {/* Kartu biru: target protein hari ini */}
-      <section className="kartu-warna kartu-biru kartu-target">
-        <div>
-          <h2>Target Protein</h2>
-          <ul className="daftar-mini">
-            <li><Flame size={16} strokeWidth={2.6} /> Hari ini <strong>{hariIni} g</strong></li>
-            <li><Check size={16} strokeWidth={2.6} /> Target <strong>{target} g</strong></li>
-            <li><ArrowRight size={16} strokeWidth={2.6} /> {sisa > 0 ? <>Sisa <strong>{sisa} g</strong></> : <strong>Tercapai! 🎉</strong>}</li>
-          </ul>
-          <Link to="/statistik" className="tombol-pil">Lihat statistik</Link>
-        </div>
-        <RingProgress nilai={hariIni} maks={target} ukuran={112} tebal={12} warna="lime"
-          label={`Protein hari ini ${hariIni} dari ${target} gram`}>
-          <strong>{Math.round((hariIni / target) * 100)}%</strong>
-        </RingProgress>
-      </section>
-
-      {/* Dua kartu kecil */}
-      <div className="grid-dua">
-        <section className="kartu-warna kartu-lime kartu-kecil">
-          <div className="kartu-kecil-atas"><h2>Latihan</h2><CalendarCheck size={20} strokeWidth={2.6} /></div>
-          <strong className="angka-besar">{latihan}<span>/7 hari</span></strong>
-          <small>minggu ini</small>
-        </section>
-        <section className="kartu-warna kartu-oranye kartu-kecil">
-          <div className="kartu-kecil-atas"><h2>Rata-rata</h2><Flame size={20} strokeWidth={2.6} /></div>
-          <strong className="angka-besar">{rata}<span> g</span></strong>
-          <small>{jumlahHari > 0 ? `protein · ${jumlahHari} hari` : 'protein 7 hari'}</small>
-        </section>
-      </div>
-
-      {/* Form tambah */}
-      <section className="kartu" ref={refForm} id="tambah">
-        <h2 className="judul-kartu">Catat hari ini</h2>
-        <FormLog ref={refProtein} labelSimpan="Simpan log" onSimpan={tambah} kosongkanSetelahSimpan />
-        {berhasil && <p className="berhasil">{berhasil}</p>}
-      </section>
-
-      {/* Riwayat */}
-      <section>
+      <section aria-labelledby="judul-riwayat">
         <div className="judul-bagian">
-          <h2>Riwayat log</h2>
+          <h2 id="judul-riwayat">Riwayat log</h2>
           {logs.length > 0 && <span className="lencana">{logs.length} log</span>}
         </div>
         {galat && <p className="galat" role="alert">{galat}</p>}
@@ -121,7 +125,7 @@ export default function Beranda() {
         ) : logs.length === 0 ? (
           <div className="status">
             <p><strong>Belum ada log.</strong></p>
-            <p>Catat latihan & protein pertamamu di atas.</p>
+            <p>Catat latihan dan protein pertamamu di atas.</p>
           </div>
         ) : (
           <ul className="daftar-log">
@@ -133,11 +137,11 @@ export default function Beranda() {
                   <div className="log-isi">
                     <div className="log-atas">
                       <strong>{log.split}</strong>
-                      <span className={`badge warna-${WARNA_SPLIT[log.split]}`}>{formatTanggal(log.tanggal)}</span>
+                      <span className={`badge badge-${WARNA_SPLIT[log.split]}`}>{formatTanggal(log.tanggal)}</span>
                     </div>
                     <p>
                       <span className={capai ? 'tercapai' : ''}>{log.protein_gram} g protein{capai && ' ✓'}</span>
-                      {log.berat_badan_kg != null && <> · {Number(log.berat_badan_kg)} kg</>}
+                      {log.berat_badan_kg != null && <> · {String(Number(log.berat_badan_kg)).replace('.', ',')} kg</>}
                     </p>
                     {log.catatan && <p className="log-catatan">{log.catatan}</p>}
                   </div>

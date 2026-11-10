@@ -26,6 +26,12 @@ export function AuthProvider({ children }) {
     return error
   }
 
+  async function masukDemo() {
+    const { data, error } = await db.masukDemo()
+    if (data) setUser(data)
+    return error
+  }
+
   function keluar() {
     db.keluar()
     setUser(null)
@@ -37,7 +43,7 @@ export function AuthProvider({ children }) {
     return error
   }
 
-  return <AuthContext.Provider value={{ user, daftar, masuk, keluar, perbaruiProfil }}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={{ user, daftar, masuk, masukDemo, keluar, perbaruiProfil }}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {

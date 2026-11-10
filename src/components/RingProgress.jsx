@@ -25,6 +25,7 @@ export default function RingProgress({ nilai, maks, ukuran = 220, tebal = 18, wa
         <circle cx={c} cy={c} r={r} fill="none" className="ring-jalur" strokeWidth={tebal} />
         <circle
           cx={c} cy={c} r={r} fill="none" stroke={`url(#${id})`} strokeWidth={tebal} strokeLinecap="round"
+          opacity={rasio > 0 ? 1 : 0}
           strokeDasharray={keliling} strokeDashoffset={keliling * (1 - rasio)}
           transform={`rotate(-90 ${c} ${c})`} className="ring-isi"
         />

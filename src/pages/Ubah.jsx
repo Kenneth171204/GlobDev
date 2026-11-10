@@ -29,14 +29,13 @@ export default function Ubah() {
 
   return (
     <>
-      <div className="topbar">
-        <button type="button" className="tombol-ikon" onClick={() => navigate('/')} aria-label="Kembali">
+      <div className="judul-baris">
+        <button type="button" className="tombol-ikon" onClick={() => navigate('/')} aria-label="Kembali ke Beranda">
           <ChevronLeft size={22} strokeWidth={2.6} />
         </button>
         <h1 className="judul-halaman">Ubah log</h1>
-        <span style={{ width: 40 }} />
       </div>
-      <section className="kartu">
+      <section className="kartu kartu-sempit">
         {memuat ? (
           <p className="status">Memuat log…</p>
         ) : galat ? (

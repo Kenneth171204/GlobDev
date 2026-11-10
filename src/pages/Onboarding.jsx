@@ -1,5 +1,8 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Beef, ChartColumn, Dumbbell } from 'lucide-react'
+import { ArrowRight, Beef, ChartColumn, Dumbbell, Play } from 'lucide-react'
+import { useAuth } from '../lib/auth.jsx'
+import { pesanGalat } from '../lib/bulking.js'
 import Logo from '../components/Logo.jsx'
 
 /** Ilustrasi buatan sendiri: dumbbell besar terangkat + konfeti sporty. */
@@ -42,26 +45,44 @@ function Ilustrasi() {
 }
 
 export default function Onboarding() {
+  const { masukDemo } = useAuth()
+  const [galat, setGalat] = useState('')
+
+  async function coba() {
+    const error = await masukDemo()
+    if (error) setGalat(pesanGalat(error))
+    // Berhasil → RuteTamu otomatis mengarahkan ke Beranda.
+  }
+
   return (
     <div className="app app-onb">
       <section className="onb-hero">
         <Logo terang size={30} />
         <h1>
-          <span>SHAPE YOUR BODY &</span>
+          <span>Bentuk tubuhmu,</span>
           BULK UP
         </h1>
         <Ilustrasi />
       </section>
 
       <section className="onb-bawah">
+        <p className="onb-intro">
+          Catat split latihan, protein, dan berat badan harian. Lihat progres bulking-mu dalam satu tempat.
+        </p>
         <ul className="onb-fitur">
           <li><span className="chip-ikon warna-oranye"><Dumbbell size={18} strokeWidth={2.6} /></span>Catat split</li>
           <li><span className="chip-ikon warna-lime"><Beef size={18} strokeWidth={2.6} /></span>Pantau protein</li>
           <li><span className="chip-ikon warna-biru"><ChartColumn size={18} strokeWidth={2.6} /></span>Lihat progres</li>
         </ul>
-        <Link to="/daftar" className="tombol tombol-biru tombol-besar">
-          Try It Now <ArrowRight size={22} strokeWidth={2.6} />
-        </Link>
+        <div className="onb-aksi">
+          <Link to="/daftar" className="tombol tombol-biru tombol-besar">
+            Daftar gratis <ArrowRight size={22} strokeWidth={2.6} aria-hidden="true" />
+          </Link>
+          <button type="button" className="tombol tombol-garis tombol-besar" onClick={coba}>
+            <Play size={20} strokeWidth={2.6} aria-hidden="true" /> Coba tanpa akun
+          </button>
+          {galat && <p className="galat" role="alert">{galat}</p>}
+        </div>
         <p className="auth-bawah">Sudah punya akun? <Link to="/masuk">Masuk</Link></p>
       </section>
     </div>
