@@ -42,7 +42,12 @@ export async function daftar({ nama, email, password }) {
   const { data, error } = await supabase.auth.signUp({
     email: email.trim(),
     password,
-    options: { data: { nama: nama.trim(), target_protein: TARGET_PROTEIN } },
+    options: {
+      data: { nama: nama.trim(), target_protein: TARGET_PROTEIN },
+      // Link konfirmasi email kembali ke situs tempat user mendaftar (localhost atau bulkup.pages.dev).
+      // Alamat ini harus terdaftar di Supabase: Authentication → URL Configuration → Redirect URLs.
+      emailRedirectTo: `${window.location.origin}/masuk`,
+    },
   })
   if (error) return { data: null, error }
   // Supabase membalas "berhasil" tanpa identitas kalau email sudah terdaftar (perlindungan enumerasi).
