@@ -184,3 +184,26 @@ export function validasiTarget(nilai) {
   if (nilai === '' || !Number.isInteger(n) || n < 50 || n > 400) return 'Isi angka bulat 50–400 gram.'
   return ''
 }
+
+/** Penjelasan singkat setiap split untuk pengguna yang belum familiar. */
+export const INFO_SPLIT = {
+  Push: 'Gerakan mendorong: dada, bahu, trisep (mis. bench press, push-up).',
+  Pull: 'Gerakan menarik: punggung dan bisep (mis. pull-up, rowing).',
+  Legs: 'Kaki dan bokong (mis. squat, leg press, lunges).',
+  Upper: 'Seluruh tubuh bagian atas dalam satu sesi.',
+  Lower: 'Seluruh tubuh bagian bawah: kaki, bokong, betis.',
+  'Full Body': 'Seluruh tubuh dalam satu sesi.',
+  Rest: 'Hari istirahat, tidak latihan. Protein tetap dicatat karena otot tumbuh saat istirahat.',
+}
+
+/** Contoh kandungan protein makanan sehari-hari (perkiraan). */
+export const CONTOH_PROTEIN = [
+  { makanan: '1 butir telur', gram: 6 },
+  { makanan: '100 g dada ayam', gram: 31 },
+  { makanan: '1 potong tempe (50 g)', gram: 10 },
+  { makanan: '1 potong tahu (50 g)', gram: 4 },
+  { makanan: '1 gelas susu (250 ml)', gram: 8 },
+  { makanan: '1 scoop whey', gram: 24 },
+  { makanan: '100 g ikan tuna', gram: 26 },
+  { makanan: '1 piring nasi (150 g)', gram: 4 },
+]

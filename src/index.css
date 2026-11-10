@@ -503,6 +503,86 @@ fieldset.isian { border: 0; padding: 0; margin: 0; min-width: 0; }
 .legenda-split li { display: flex; align-items: center; gap: 6px; }
 .legenda-split i { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
 
+/* ---------- Petunjuk & bantuan ---------- */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.sub-halaman { font-size: 15px; color: var(--redup); margin-top: -8px; }
+.petunjuk { font-size: 13px; color: var(--redup); margin-top: 6px; line-height: 1.45; }
+.petunjuk strong { color: var(--hitam); }
+.petunjuk-kartu { font-size: 14px; margin: -6px 0 12px; }
+
+.header-kanan { display: flex; align-items: center; gap: 8px; }
+.tombol-bantuan {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px; min-width: 44px; justify-content: center;
+  padding: 8px; border-radius: 99px; text-decoration: none; color: var(--hitam); font-weight: 700; font-size: 15px;
+  background: #fff; box-shadow: var(--bayang);
+}
+.tombol-bantuan span { display: none; }
+.tombol-bantuan:hover { background: var(--lime); }
+.tombol-bantuan.active { background: var(--hitam); color: #fff; }
+
+/* Contoh protein di form */
+.bantu-protein { background: var(--latar); border-radius: var(--radius-s); padding: 0 14px; font-size: 14px; }
+.bantu-protein summary {
+  cursor: pointer; font-weight: 700; color: var(--biru-tombol-2); padding: 12px 0; min-height: 44px;
+  list-style: none; display: flex; align-items: center; gap: 8px;
+}
+.bantu-protein summary::-webkit-details-marker { display: none; }
+.bantu-protein summary::before { content: '＋'; font-weight: 900; }
+.bantu-protein[open] summary::before { content: '－'; }
+.bantu-protein p { color: var(--redup); margin-bottom: 8px; }
+.bantu-protein ul { list-style: none; padding: 0; margin: 0 0 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
+.bantu-protein li { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px dashed var(--garis); padding: 3px 0; }
+.bantu-protein li strong { white-space: nowrap; }
+.bantu-protein p:last-child { padding-bottom: 12px; margin: 0; }
+
+/* Kartu "Mulai di sini" */
+.panduan { border: 2px solid var(--lime); }
+.panduan-atas { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.panduan h2 { font-size: 20px; font-weight: 900; }
+.panduan-atas p { font-size: 14px; color: var(--redup); }
+.panduan-bar { height: 8px; border-radius: 99px; background: var(--latar); overflow: hidden; margin: 12px 0 14px; }
+.panduan-bar span { display: block; height: 100%; background: var(--lime); border-radius: 99px; transition: width 0.4s; }
+.panduan-langkah { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.panduan-langkah li { display: flex; gap: 12px; align-items: flex-start; }
+.panduan-nomor {
+  flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--hitam); color: #fff; font-weight: 800; font-size: 14px;
+}
+.panduan-langkah li.selesai .panduan-nomor { background: var(--lime); color: var(--hitam); }
+.panduan-langkah li.selesai strong { text-decoration: line-through; color: var(--redup); }
+.panduan-langkah strong { font-size: 15px; }
+.panduan-langkah p { font-size: 14px; color: var(--redup); }
+.tautan-langkah {
+  display: inline-flex; align-items: center; min-height: 36px; margin-top: 4px; padding: 6px 14px;
+  border: 0; border-radius: 99px; background: var(--hitam); color: #fff; cursor: pointer;
+  font-size: 13px; font-weight: 700; text-decoration: none;
+}
+.tautan-langkah:hover { background: #2a2a2a; }
+.panduan-bawah { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--redup); margin-top: 14px; }
+
+/* Halaman Bantuan */
+.cara-pakai { list-style: none; padding: 0; margin: 0 0 16px; display: grid; gap: 14px; }
+.cara-pakai li { display: flex; gap: 12px; align-items: flex-start; }
+.cara-pakai strong { font-size: 16px; }
+.cara-pakai p { font-size: 14px; color: var(--redup); }
+.daftar-istilah { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.daftar-istilah li { display: flex; gap: 12px; align-items: flex-start; }
+.daftar-istilah .split-ikon { width: 36px; height: 36px; border-radius: 11px; }
+.daftar-istilah p { font-size: 14px; color: var(--redup); }
+.glosarium { display: grid; gap: 12px; }
+.glosarium dt { font-weight: 800; }
+.glosarium dd { font-size: 14px; color: var(--redup); }
+.faq { display: grid; gap: 8px; }
+.faq details { background: var(--latar); border-radius: var(--radius-s); padding: 0 14px; }
+.faq summary {
+  cursor: pointer; font-weight: 700; font-size: 15px; padding: 12px 24px 12px 0; min-height: 44px;
+  list-style: none; position: relative;
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: '＋'; position: absolute; right: 0; top: 12px; font-weight: 900; }
+.faq details[open] summary::after { content: '－'; }
+.faq p { font-size: 14px; color: var(--redup); padding-bottom: 14px; }
+
 /* ---------- Profil ---------- */
 .kartu-profil { text-align: center; }
 .kartu-profil h2 { font-size: 24px; font-weight: 900; }
@@ -541,8 +621,10 @@ fieldset.isian { border: 0; padding: 0; margin: 0; min-width: 0; }
   .nav-atas-item:hover { background: #fff; }
   .nav-atas-item.active { background: var(--hitam); color: #fff; }
   .nav-atas .tombol { margin-left: 8px; }
+  .tombol-bantuan { padding: 8px 14px; }
+  .tombol-bantuan span { display: inline; }
   .bottom-nav { display: none; }
-  .aksi-form { bottom: 16px; }
+  .aksi-form { position: static; }
 
   .konten { max-width: 1160px; margin: 0 auto; padding: 8px 32px 56px; gap: 24px; }
 

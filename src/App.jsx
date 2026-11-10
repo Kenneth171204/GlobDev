@@ -10,6 +10,7 @@ import Beranda from './pages/Beranda.jsx'
 import Statistik from './pages/Statistik.jsx'
 import Profil from './pages/Profil.jsx'
 import Ubah from './pages/Ubah.jsx'
+import Bantuan from './pages/Bantuan.jsx'
 
 export default function App() {
   if (!supabaseSiap) {
@@ -42,6 +43,7 @@ export default function App() {
             <Route path="/statistik" element={<Statistik />} />
             <Route path="/profil" element={<Profil />} />
             <Route path="/ubah/:id" element={<Ubah />} />
+            <Route path="/bantuan" element={<Bantuan />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

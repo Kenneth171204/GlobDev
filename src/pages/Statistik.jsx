@@ -36,6 +36,7 @@ export default function Statistik() {
   return (
     <>
       <h1 className="judul-halaman">Statistik</h1>
+      <p className="sub-halaman">Perkembangan protein, latihan, dan berat badanmu dari log yang sudah dicatat.</p>
 
       <div className="kolom-dua">
       <div className="kolom">
@@ -84,8 +85,12 @@ export default function Statistik() {
           <h2 className="judul-kartu">Protein harian</h2>
           <span className="legenda"><i className="titik-oranye" /> gram</span>
         </div>
+        <p className="petunjuk petunjuk-kartu">
+          Setiap titik adalah satu hari yang kamu catat. Garis putus-putus adalah target {target} g. Usahakan titik berada di atas garis itu.
+        </p>
         <LineChart data={seri.map((d) => ({ label: d.label, nilai: d.protein }))} target={target} satuan="g"
-          label="Grafik protein harian" kosong="Belum ada log protein di rentang ini." />
+          label="Grafik protein harian"
+          kosong="Belum ada log di rentang ini. Catat protein di Beranda, grafiknya muncul di sini." />
       </section>
 
       <section className="kartu">
@@ -93,12 +98,15 @@ export default function Statistik() {
           <h2 className="judul-kartu">Berat badan</h2>
           <span className="legenda"><i className="titik-biru" /> kg</span>
         </div>
+        <p className="petunjuk petunjuk-kartu">Saat bulking, garis ini idealnya naik perlahan (sekitar 0,25–0,5 kg per minggu).</p>
         <LineChart data={seri.map((d) => ({ label: d.label, nilai: d.berat }))} warna="#1F6BFF" satuan="kg"
-          label="Grafik berat badan" kosong="Isi berat badan di log untuk melihat grafiknya." />
+          label="Grafik berat badan"
+          kosong="Belum ada data berat. Isi kolom Berat badan saat mencatat log untuk melihat grafiknya." />
       </section>
 
       <section className="kartu">
-        <h2 className="judul-kartu">Komposisi split</h2>
+        <h2 className="judul-kartu">Jenis latihan</h2>
+        <p className="petunjuk petunjuk-kartu">Berapa kali tiap jenis latihan kamu lakukan. Usahakan seimbang supaya semua bagian tubuh terlatih.</p>
         {totalSplit === 0 ? (
           <p className="grafik-kosong">Belum ada latihan di rentang ini.</p>
         ) : (

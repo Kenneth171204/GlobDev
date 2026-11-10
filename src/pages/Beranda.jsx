@@ -12,6 +12,8 @@ import FormLog from '../components/FormLog.jsx'
 import SplitIkon from '../components/SplitIkon.jsx'
 import BannerDemo from '../components/BannerDemo.jsx'
 import { useKonfirmasi } from '../components/Konfirmasi.jsx'
+import Panduan from '../components/Panduan.jsx'
+import { useBukaFormCatat } from '../components/BottomNav.jsx'
 
 export default function Beranda() {
   const { user } = useAuth()
@@ -22,6 +24,7 @@ export default function Beranda() {
   const refProtein = useRef(null)
   const { state } = useLocation()
   const konfirmasi = useKonfirmasi()
+  const bukaForm = useBukaFormCatat()
 
   // Tombol "Catat" (bottom nav / header) → gulir ke form dan fokus ke isian protein.
   useEffect(() => {
@@ -68,6 +71,7 @@ export default function Beranda() {
   return (
     <>
       <BannerDemo />
+      {!memuat && <Panduan user={user} jumlahLog={logs.length} onCatat={bukaForm} />}
 
       <div className="beranda-atas">
         {/* Satu kartu ringkasan: setiap angka hanya muncul sekali */}

@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { setPenanda } from '../lib/panduan.js'
 import { LogOut, Mail, Target } from 'lucide-react'
 import { useAuth } from '../lib/auth.jsx'
 import { useLogs } from '../lib/useLogs.js'
@@ -14,6 +15,9 @@ export default function Profil() {
   const [galat, setGalat] = useState('')
   const [berhasil, setBerhasil] = useState('')
   const [menyimpan, setMenyimpan] = useState(false)
+
+  // Langkah "Cek target protein" di kartu Mulai di sini dianggap selesai setelah Profil dibuka.
+  useEffect(() => { setPenanda(user.id, 'profil') }, [user.id])
 
   const berat = beratTerakhir(logs)
   const saran = berat ? Math.round(berat.berat * 2) : null
@@ -73,6 +77,10 @@ export default function Profil() {
           <h2 className="judul-kartu">Target protein harian</h2>
           <span className="chip-ikon warna-oranye"><Target size={18} strokeWidth={2.6} /></span>
         </div>
+        <p className="petunjuk petunjuk-kartu">
+          Jumlah protein yang ingin kamu makan setiap hari. Untuk bulking, umumnya 1,6–2,2 g per kg berat badan.
+          Angka ini dipakai untuk progress bar di Beranda dan Statistik.
+        </p>
         <form className="form" onSubmit={simpan} noValidate>
           <div className="isian">
             <label htmlFor="target">Target per hari</label>
@@ -91,6 +99,9 @@ export default function Profil() {
                 Pakai angka ini
               </button>
             </p>
+          )}
+          {!saran && (
+            <p className="saran">Isi berat badan di log harian, nanti muncul saran target yang sesuai berat badanmu.</p>
           )}
           {berhasil && <p className="berhasil">{berhasil}</p>}
           <button className="tombol tombol-oranye" type="submit"
