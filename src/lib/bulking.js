@@ -118,6 +118,11 @@ export function pesanGalat(error) {
   if (!error) return ''
   if (error.code === '23505') return 'Log untuk tanggal ini sudah ada. Ubah log yang sudah ada saja.'
   if (error.code === '23514') return 'Ada isian di luar batas yang diizinkan. Periksa lagi angkanya.'
+  // Layanan email bawaan Supabase hanya mengirim sedikit email per jam (email konfirmasi pendaftaran).
+  if (error.code === 'over_email_send_rate_limit' || /email rate limit/i.test(error.message || '')) {
+    return 'Pendaftaran baru sedang dibatasi karena batas kirim email konfirmasi tercapai. Coba lagi sekitar 1 jam lagi, atau pakai "Coba tanpa akun" dulu.'
+  }
+  if (error.code === 'email_address_invalid') return 'Alamat email ini ditolak. Pakai alamat email yang aktif.'
   const m = error.message || ''
   if (/invalid login credentials/i.test(m)) return 'Email atau password salah.'
   if (/already registered|already exists/i.test(m)) return 'Email sudah terdaftar. Silakan masuk.'

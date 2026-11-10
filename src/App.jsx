@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, RuteLogin, RuteTamu } from './lib/auth.jsx'
 import { supabaseSiap } from './lib/supabase.js'
+import { KonfirmasiProvider } from './components/Konfirmasi.jsx'
 import AppLayout from './components/AppLayout.jsx'
 import Onboarding from './pages/Onboarding.jsx'
 import Daftar from './pages/Daftar.jsx'
@@ -27,6 +28,7 @@ export default function App() {
 
   return (
     <AuthProvider>
+      <KonfirmasiProvider>
       <BrowserRouter>
         <Routes>
           {/* Tamu (belum login) */}
@@ -45,6 +47,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
+      </KonfirmasiProvider>
     </AuthProvider>
   )
 }

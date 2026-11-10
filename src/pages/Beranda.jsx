@@ -11,6 +11,7 @@ import {
 import FormLog from '../components/FormLog.jsx'
 import SplitIkon from '../components/SplitIkon.jsx'
 import BannerDemo from '../components/BannerDemo.jsx'
+import { useKonfirmasi } from '../components/Konfirmasi.jsx'
 
 export default function Beranda() {
   const { user } = useAuth()
@@ -20,6 +21,7 @@ export default function Beranda() {
   const refForm = useRef(null)
   const refProtein = useRef(null)
   const { state } = useLocation()
+  const konfirmasi = useKonfirmasi()
 
   // Tombol "Catat" (bottom nav / header) → gulir ke form dan fokus ke isian protein.
   useEffect(() => {
@@ -45,7 +47,12 @@ export default function Beranda() {
   }
 
   async function hapus(log) {
-    if (!window.confirm(`Hapus log ${formatTanggal(log.tanggal)}? Data tidak bisa dikembalikan.`)) return
+    const yakin = await konfirmasi({
+      judul: 'Hapus log ini?',
+      pesan: `Log ${log.split} tanggal ${formatTanggal(log.tanggal)} (${log.protein_gram} g protein) akan dihapus permanen.`,
+      labelYa: 'Hapus', ikon: 'hapus', bahaya: true,
+    })
+    if (!yakin) return
     const { error } = await db.hapusLog(log.id)
     if (error) return setGalat(pesanGalat(error))
     setLogs((l) => l.filter((x) => x.id !== log.id))
