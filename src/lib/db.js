@@ -27,13 +27,31 @@ function keUserApp(authUser, profil) {
  */
 export async function muatUser(authUser) {
   if (!authUser) return { data: null, error: null }
-  let { data: profil, error } = await supabase.from('profil').select('nama, target_protein').eq('id', authUser.id).maybeSingle()
+  const kolom = 'nama, target_protein, email_sambutan_at'
+  let { data: profil, error } = await supabase.from('profil').select(kolom).eq('id', authUser.id).maybeSingle()
   if (!error && !profil) {
     const nama = (authUser.user_metadata?.nama || authUser.email?.split('@')[0] || 'Kamu').slice(0, 80)
     ;({ data: profil, error } = await supabase.from('profil')
-      .insert({ id: authUser.id, nama }).select('nama, target_protein').single())
+      .insert({ id: authUser.id, nama }).select(kolom).single())
   }
+  if (profil && !profil.email_sambutan_at) kirimEmailSambutan(authUser.id)
   return { data: keUserApp(authUser, profil), error }
+}
+
+// Satu panggilan per user per sesi browser; fungsi di server juga menjamin hanya terkirim sekali.
+const sambutanDiminta = new Set()
+
+/**
+ * Minta Edge Function `kirim-email-sambutan` mengirim email sambutan (Resend) ke user ini.
+ * Tidak ditunggu: email adalah bonus, kegagalannya tidak boleh mengganggu login.
+ */
+function kirimEmailSambutan(userId) {
+  if (sambutanDiminta.has(userId)) return
+  sambutanDiminta.add(userId)
+  supabase.functions.invoke('kirim-email-sambutan', { body: {} }).then(({ data, error }) => {
+    if (error) console.warn('Email sambutan belum terkirim:', error.message)
+    else if (data?.terkirim) console.info('Email sambutan terkirim.')
+  })
 }
 
 // ---------- Autentikasi ----------
