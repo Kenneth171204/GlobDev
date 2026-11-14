@@ -63,14 +63,23 @@ Buka `http://localhost:5173`, lalu daftar akun baru.
 
 ## Deploy ke Cloudflare Pages
 
-Live: **https://bulkup.pages.dev** (project Cloudflare Pages `bulkup`).
+Live: **https://bulkup.pages.dev** (project Cloudflare Pages `bulkup`, tersambung ke repo GitHub ini).
 
-Untuk deploy ulang setelah ada perubahan (butuh `npx wrangler login` sekali). Nilai di `.env` ikut dibundel saat `npm run build`, jadi pastikan `.env` sudah terisi:
+Deploy berjalan **otomatis**:
 
 ```
-npm run build
-npx wrangler pages deploy dist --project-name bulkup --branch main
+Laptop (git push / merge PR) → GitHub → Cloudflare build (npm run build) → folder dist → bulkup.pages.dev
 ```
+
+- Push atau merge ke `main` → deploy **Production** ke https://bulkup.pages.dev.
+- Branch lain / PR → deploy **Preview** dengan alamat sendiri (`<branch>.bulkup.pages.dev`).
+- Pengaturan build di Cloudflare: build command `npm run build`, output `dist`.
+- Environment variables di Cloudflare (Settings → Variables and secrets, environment **Production** dan **Preview**):
+  `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `NODE_VERSION=22`.
+
+**Penting:** nilai `VITE_*` dibaca saat **build**, bukan saat halaman dibuka. Kalau env di Cloudflare diubah, jalankan **Retry deployment** (atau push commit baru). Kalau env lupa diisi, situs live menampilkan "Supabase belum disambungkan".
+
+Deploy manual dari laptop masih bisa dipakai bila perlu: `npm run build` lalu `npx wrangler pages deploy dist --project-name bulkup --branch main`.
 
 File `public/_redirects` membuat URL seperti `/statistik` atau `/ubah/...` tetap jalan saat dimuat ulang.
 
