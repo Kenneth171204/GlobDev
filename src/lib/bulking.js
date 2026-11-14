@@ -55,16 +55,23 @@ export function hariLatihanMingguIni(logs, hariIni = new Date()) {
   }).length
 }
 
-/** Berat badan terakhir dan selisihnya dengan berat yang tercatat sebelumnya. */
-export function beratTerakhir(logs) {
-  const adaBerat = logs
+/**
+ * Berat badan terakhir dan selisihnya dengan pengukuran sebelumnya (berat berbeda).
+ * Masukan: daftar baris pengukuran_badan.
+ */
+export function beratTerakhir(pengukuran) {
+  const adaBerat = pengukuran
     .filter((l) => l.berat_badan_kg != null)
     .sort((a, b) => b.tanggal.localeCompare(a.tanggal))
   if (adaBerat.length === 0) return null
   const sekarang = Number(adaBerat[0].berat_badan_kg)
-  const sebelum = adaBerat[1] ? Number(adaBerat[1].berat_badan_kg) : null
+  // Bandingkan dengan pengukuran terakhir yang beratnya berbeda (lewati konfirmasi "masih sama").
+  const beda = adaBerat.slice(1).find((p) => Number(p.berat_badan_kg) !== sekarang)
+  const sebelum = beda ? Number(beda.berat_badan_kg) : null
   return {
     berat: sekarang,
+    tinggi: adaBerat[0].tinggi_badan_cm != null ? Number(adaBerat[0].tinggi_badan_cm) : null,
+    tanggal: adaBerat[0].tanggal,
     selisih: sebelum == null ? null : Math.round((sekarang - sebelum) * 10) / 10,
   }
 }
@@ -82,11 +89,6 @@ export function validasiLog(isian, hariIni = new Date()) {
   else if (!Number.isInteger(protein) || protein < 0 || protein > 500)
     galat.protein_gram = 'Isi angka bulat 0–500 gram.'
 
-  if (isian.berat_badan_kg !== '') {
-    const berat = Number(isian.berat_badan_kg)
-    if (Number.isNaN(berat) || berat < 20 || berat > 300) galat.berat_badan_kg = 'Isi angka 20–300 kg.'
-  }
-
   if (isian.catatan.length > 200) galat.catatan = 'Maksimal 200 karakter.'
   return galat
 }
@@ -97,7 +99,6 @@ export function keBarisLog(isian) {
     tanggal: isian.tanggal,
     split: isian.split,
     protein_gram: Number(isian.protein_gram),
-    berat_badan_kg: isian.berat_badan_kg === '' ? null : Math.round(Number(isian.berat_badan_kg) * 10) / 10,
     catatan: isian.catatan.trim(),
   }
 }
@@ -108,7 +109,6 @@ export function keIsianForm(log) {
     tanggal: log.tanggal,
     split: log.split,
     protein_gram: String(log.protein_gram),
-    berat_badan_kg: log.berat_badan_kg == null ? '' : String(log.berat_badan_kg),
     catatan: log.catatan ?? '',
   }
 }
@@ -158,7 +158,6 @@ export function seriHarian(logs, jumlahHari, hariIni = new Date()) {
         ? d.toLocaleDateString('id-ID', { weekday: 'short' })
         : String(d.getDate()),
       protein: log ? log.protein_gram : null,
-      berat: log?.berat_badan_kg != null ? Number(log.berat_badan_kg) : null,
     })
   }
   return hasil
@@ -207,3 +206,48 @@ export const CONTOH_PROTEIN = [
   { makanan: '100 g ikan tuna', gram: 26 },
   { makanan: '1 piring nasi (150 g)', gram: 4 },
 ]
+
+// ---------- Berat & tinggi badan (tabel pengukuran_badan) ----------
+
+/** Pengingat muncul kalau pengukuran terakhir sudah 7 hari atau lebih. */
+export const HARI_PENGINGAT = 7
+
+/** Jumlah hari dari tanggal (YYYY-MM-DD) sampai hari ini. */
+export function hariSejak(tanggal, hariIni = new Date()) {
+  const a = new Date(tanggal + 'T00:00:00')
+  const b = new Date(tanggalLokal(hariIni) + 'T00:00:00')
+  return Math.round((b - a) / 86400000)
+}
+
+/** 'kosong' (belum pernah diisi), 'perlu' (sudah ≥ 7 hari), atau 'baru'. */
+export function statusPengukuran(pengukuran, hariIni = new Date()) {
+  const terakhir = beratTerakhir(pengukuran)
+  if (!terakhir) return 'kosong'
+  return hariSejak(terakhir.tanggal, hariIni) >= HARI_PENGINGAT ? 'perlu' : 'baru'
+}
+
+/** Teks "hari ini" / "kemarin" / "8 hari lalu". */
+export function teksHariLalu(tanggal, hariIni = new Date()) {
+  const n = hariSejak(tanggal, hariIni)
+  if (n <= 0) return 'hari ini'
+  if (n === 1) return 'kemarin'
+  return `${n} hari lalu`
+}
+
+/** Angka dengan koma desimal ala Indonesia: 65.4 → "65,4". */
+export const angkaId = (n) => String(n).replace('.', ',')
+
+export function validasiPengukuran(isian) {
+  const galat = {}
+  const berat = Number(isian.berat)
+  if (isian.berat === '' || Number.isNaN(berat) || berat < 20 || berat > 300) galat.berat = 'Isi berat 20–300 kg.'
+  const tinggi = Number(isian.tinggi)
+  if (isian.tinggi === '' || Number.isNaN(tinggi) || tinggi < 100 || tinggi > 250) galat.tinggi = 'Isi tinggi 100–250 cm.'
+  return galat
+}
+
+/** Deret berat untuk grafik: hanya hari yang punya pengukuran, `jumlahHari` terakhir. */
+export function seriBerat(pengukuran, jumlahHari, hariIni = new Date()) {
+  const peta = new Map(pengukuran.map((p) => [p.tanggal, Number(p.berat_badan_kg)]))
+  return seriHarian([], jumlahHari, hariIni).map((d) => ({ label: d.label, nilai: peta.get(d.tanggal) ?? null }))
+}

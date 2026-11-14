@@ -1,10 +1,12 @@
 -- BulkUp (Bulking & Workout Tracker) — skema database Supabase
--- Sudah diterapkan ke project "GlobDev" sebagai migration `buat_log_harian` dan `buat_profil`.
+-- Sudah diterapkan ke project "GlobDev" sebagai migration `buat_log_harian`, `buat_profil`,
+-- dan `pengukuran_badan_dan_nama_google`.
 -- Untuk project baru: Dashboard → SQL Editor → New query → tempel seluruh file → Run.
 --
 -- Tabel:
 --   public.log_harian  satu baris per user per tanggal (split, protein, berat, catatan)
---   public.profil      satu baris per user (nama, target protein), dibuat otomatis saat daftar
+--   public.profil            satu baris per user (nama, target protein), dibuat otomatis saat daftar
+--   public.pengukuran_badan  riwayat berat & tinggi badan, dicek/dikonfirmasi seminggu sekali
 
 -- =====================================================================
 -- 1. Log Harian
@@ -84,11 +86,13 @@ security definer
 set search_path = ''
 as $$
 declare
-  v_nama   text := left(nullif(trim(new.raw_user_meta_data ->> 'nama'), ''), 80);
+  v_meta   jsonb := coalesce(new.raw_user_meta_data, '{}'::jsonb);
+  -- nama dari daftar email (nama) atau dari Google (full_name / name)
+  v_nama   text := left(nullif(trim(coalesce(v_meta ->> 'nama', v_meta ->> 'full_name', v_meta ->> 'name')), ''), 80);
   v_target integer := 130;
 begin
-  if (new.raw_user_meta_data ->> 'target_protein') ~ '^\d{2,3}$' then
-    v_target := (new.raw_user_meta_data ->> 'target_protein')::integer;
+  if (v_meta ->> 'target_protein') ~ '^\d{2,3}$' then
+    v_target := (v_meta ->> 'target_protein')::integer;
     if v_target not between 50 and 400 then v_target := 130; end if;
   end if;
 
@@ -122,3 +126,44 @@ drop trigger if exists profil_updated_at on public.profil;
 create trigger profil_updated_at
   before update on public.profil
   for each row execute function private.set_updated_at();
+
+-- =====================================================================
+-- 3. Pengukuran badan (berat & tinggi, dicek seminggu sekali)
+-- =====================================================================
+
+create table if not exists public.pengukuran_badan (
+  id               uuid primary key default gen_random_uuid(),
+  user_id          uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  tanggal          date not null default current_date,
+  berat_badan_kg   numeric(5, 1) not null check (berat_badan_kg between 20 and 300),
+  tinggi_badan_cm  numeric(4, 1) check (tinggi_badan_cm is null or tinggi_badan_cm between 100 and 250),
+  created_at       timestamptz not null default now(),
+  -- satu baris per hari; "Masih sama" = upsert hari ini dengan nilai yang sama
+  constraint pengukuran_satu_per_hari unique (user_id, tanggal)
+);
+
+alter table public.pengukuran_badan enable row level security;
+
+drop policy if exists "Lihat pengukuran sendiri" on public.pengukuran_badan;
+create policy "Lihat pengukuran sendiri" on public.pengukuran_badan
+  for select to authenticated using ((select auth.uid()) = user_id);
+
+drop policy if exists "Tambah pengukuran sendiri" on public.pengukuran_badan;
+create policy "Tambah pengukuran sendiri" on public.pengukuran_badan
+  for insert to authenticated with check ((select auth.uid()) = user_id);
+
+drop policy if exists "Ubah pengukuran sendiri" on public.pengukuran_badan;
+create policy "Ubah pengukuran sendiri" on public.pengukuran_badan
+  for update to authenticated
+  using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+
+drop policy if exists "Hapus pengukuran sendiri" on public.pengukuran_badan;
+create policy "Hapus pengukuran sendiri" on public.pengukuran_badan
+  for delete to authenticated using ((select auth.uid()) = user_id);
+
+-- Berat lama dari log_harian dipindah ke sini; kolom log_harian.berat_badan_kg tidak dipakai lagi.
+insert into public.pengukuran_badan (user_id, tanggal, berat_badan_kg, created_at)
+select user_id, tanggal, berat_badan_kg, created_at
+from public.log_harian
+where berat_badan_kg is not null
+on conflict (user_id, tanggal) do nothing;

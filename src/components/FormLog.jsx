@@ -2,7 +2,8 @@ import { forwardRef, useState } from 'react'
 import { CONTOH_PROTEIN, DAFTAR_SPLIT, INFO_SPLIT, tanggalLokal, validasiLog } from '../lib/bulking.js'
 import SplitIkon from './SplitIkon.jsx'
 
-export const ISIAN_KOSONG = { tanggal: '', split: 'Push', protein_gram: '', berat_badan_kg: '', catatan: '' }
+// Berat & tinggi badan tidak lagi diisi harian; lihat components/DataTubuh.jsx.
+export const ISIAN_KOSONG = { tanggal: '', split: 'Push', protein_gram: '', catatan: '' }
 
 /**
  * Form Log Harian, dipakai di Beranda (tambah) dan Ubah (edit).
@@ -62,8 +63,7 @@ const FormLog = forwardRef(function FormLog(
         {galat.split && <p className="pesan-salah">{galat.split}</p>}
       </fieldset>
 
-      <div className="form-baris">
-        <div className="isian">
+      <div className="isian isian-protein">
           <label htmlFor="protein_gram">Protein dimakan</label>
           <div className={`isian-satuan ${galat.protein_gram ? 'salah' : ''}`}>
             <input id="protein_gram" ref={refProtein} type="number" inputMode="numeric" min="0" max="500" step="1"
@@ -73,18 +73,6 @@ const FormLog = forwardRef(function FormLog(
           </div>
           <p className="petunjuk" id="petunjuk-protein">Total gram protein dari semua makanan hari ini.</p>
           {galat.protein_gram && <p className="pesan-salah">{galat.protein_gram}</p>}
-        </div>
-        <div className="isian">
-          <label htmlFor="berat_badan_kg">Berat badan <small>(opsional)</small></label>
-          <div className={`isian-satuan ${galat.berat_badan_kg ? 'salah' : ''}`}>
-            <input id="berat_badan_kg" type="number" inputMode="decimal" min="20" max="300" step="0.1"
-              placeholder="65.5" value={isian.berat_badan_kg} onChange={ubah('berat_badan_kg')}
-              aria-describedby="petunjuk-berat" />
-            <span>kg</span>
-          </div>
-          <p className="petunjuk" id="petunjuk-berat">Timbang pagi hari sebelum makan agar konsisten.</p>
-          {galat.berat_badan_kg && <p className="pesan-salah">{galat.berat_badan_kg}</p>}
-        </div>
       </div>
 
       <details className="bantu-protein">

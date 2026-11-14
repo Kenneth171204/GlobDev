@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { Dumbbell, Flame, Trophy } from 'lucide-react'
 import { useAuth } from '../lib/auth.jsx'
 import { useLogs } from '../lib/useLogs.js'
+import { usePengukuran } from '../lib/usePengukuran.js'
 import {
-  DAFTAR_SPLIT, WARNA_SPLIT, hariLatihanMingguIni, proteinHariIni, rataProtein7Hari, seriHarian, streakTarget,
+  DAFTAR_SPLIT, WARNA_SPLIT, hariLatihanMingguIni, proteinHariIni, rataProtein7Hari, seriBerat, seriHarian, streakTarget,
 } from '../lib/bulking.js'
 import RingProgress from '../components/RingProgress.jsx'
 import LineChart from '../components/LineChart.jsx'
@@ -17,6 +18,7 @@ export default function Statistik() {
   const { user } = useAuth()
   const target = user.target_protein
   const { logs, memuat } = useLogs()
+  const { pengukuran } = usePengukuran()
   const [rentang, setRentang] = useState(7)
 
   const hariIni = proteinHariIni(logs)
@@ -95,13 +97,15 @@ export default function Statistik() {
 
       <section className="kartu">
         <div className="judul-kartu-baris">
-          <h2 className="judul-kartu">Berat badan</h2>
+          <h2 className="judul-kartu">Berat badan <small className="judul-kecil">8 minggu terakhir</small></h2>
           <span className="legenda"><i className="titik-biru" /> kg</span>
         </div>
-        <p className="petunjuk petunjuk-kartu">Saat bulking, garis ini idealnya naik perlahan (sekitar 0,25–0,5 kg per minggu).</p>
-        <LineChart data={seri.map((d) => ({ label: d.label, nilai: d.berat }))} warna="#1F6BFF" satuan="kg"
-          label="Grafik berat badan"
-          kosong="Belum ada data berat. Isi kolom Berat badan saat mencatat log untuk melihat grafiknya." />
+        <p className="petunjuk petunjuk-kartu">
+          Dari cek berat mingguan. Saat bulking, garis ini idealnya naik perlahan (sekitar 0,25–0,5 kg per minggu).
+        </p>
+        <LineChart data={seriBerat(pengukuran, 56)} warna="#1F6BFF" satuan="kg"
+          label="Grafik berat badan 8 minggu terakhir"
+          kosong="Belum ada data berat. Isi berat & tinggi badan di Beranda atau Profil untuk melihat grafiknya." />
       </section>
 
       <section className="kartu">

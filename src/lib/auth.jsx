@@ -11,6 +11,16 @@ export function AuthProvider({ children }) {
   const [memuat, setMemuat] = useState(() => db.userDemo() === null)
 
   const idTermuat = useRef(null)
+  // Kalau login Google dibatalkan/gagal, Supabase kembali ke situs dengan ?error_description=…
+  const [galatOAuth, setGalatOAuth] = useState(() => {
+    const p = new URLSearchParams(window.location.search + '&' + window.location.hash.slice(1))
+    const pesan = p.get('error_description')
+    if (!pesan) return ''
+    window.history.replaceState(null, '', window.location.pathname)
+    return /access_denied|cancel/i.test(p.get('error') + pesan)
+      ? 'Login Google dibatalkan.'
+      : `Login Google gagal: ${pesan}`
+  })
 
   useEffect(() => {
     // Ikuti sesi awal, login, dan keluar (juga dari tab lain).
@@ -53,6 +63,13 @@ export function AuthProvider({ children }) {
     return error
   }
 
+  /** Mengarahkan browser ke Google. Mengembalikan galat hanya kalau gagal sebelum pindah halaman. */
+  async function masukGoogle() {
+    setGalatOAuth('')
+    const { error } = await db.masukGoogle()
+    return error
+  }
+
   async function masukDemo() {
     const { data, error } = db.masukDemo()
     if (data) setUser(data)
@@ -72,7 +89,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, memuat, daftar, masuk, masukDemo, keluar, perbaruiProfil }}>
+    <AuthContext.Provider value={{ user, memuat, daftar, masuk, masukGoogle, galatOAuth, masukDemo, keluar, perbaruiProfil }}>
       {children}
     </AuthContext.Provider>
   )

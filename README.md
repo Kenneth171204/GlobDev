@@ -32,13 +32,14 @@ Semua halaman setelah login memakai header yang sama (logo + avatar). Di ponsel,
 
 Akun dan log disimpan di Supabase (project **GlobDev**, region ap-southeast-2).
 
-- **Akun:** Supabase Auth (email + password).
+- **Akun:** Supabase Auth: email + password, atau **Google** (`signInWithOAuth`, alur PKCE). Provider Google diatur di Supabase → Authentication → Sign In / Providers; Redirect URLs harus memuat `https://bulkup.pages.dev/**` dan `http://localhost:5173/**`.
 - **Tabel** (skema lengkap di `supabase/schema.sql`):
 
 | Tabel | Isi | Catatan |
 |---|---|---|
 | `profil` | `id` (= user Auth), `nama`, `target_protein` (50–400 g, default 130), `created_at`, `updated_at` | Dibuat otomatis oleh trigger `saat_user_baru` saat daftar |
 | `log_harian` | `id`, `user_id`, `tanggal`, `split`, `protein_gram` (0–500), `berat_badan_kg` (20–300, opsional), `catatan` (≤ 200), `created_at` | Unik per `(user_id, tanggal)` |
+| `pengukuran_badan` | `id`, `user_id`, `tanggal`, `berat_badan_kg` (20–300), `tinggi_badan_cm` (100–250), `created_at` | Riwayat berat & tinggi; unik per `(user_id, tanggal)`. Diisi sekali, lalu pengingat tiap 7 hari (Masih sama / Perbarui) |
 
   Menghapus akun di Supabase Auth ikut menghapus profil dan semua log-nya.
 - **Keamanan:** Row Level Security aktif di kedua tabel; setiap user hanya bisa membaca dan mengubah profil serta log miliknya sendiri. Fungsi trigger ada di schema `private` yang tidak terekspos lewat API. Frontend hanya memegang *publishable key*, yang memang aman ada di browser.

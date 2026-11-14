@@ -4,6 +4,7 @@ import { ArrowRight, Lock, Mail, UserRound } from 'lucide-react'
 import { useAuth } from '../lib/auth.jsx'
 import { pesanGalat } from '../lib/bulking.js'
 import AuthLayout, { IsianIkon } from '../components/AuthLayout.jsx'
+import TombolGoogle, { PemisahAtau } from '../components/TombolGoogle.jsx'
 
 export default function Daftar() {
   const { daftar } = useAuth()
@@ -55,6 +56,8 @@ export default function Daftar() {
       subjudul="Mulai catat latihan & protein harianmu."
       bawah={<>Sudah punya akun? <Link to="/masuk">Masuk</Link></>}
     >
+      <TombolGoogle label="Daftar dengan Google" />
+      <PemisahAtau />
       <form className="form" onSubmit={kirim} noValidate>
         <IsianIkon id="nama" label="Nama" ikon={UserRound} autoComplete="name" placeholder="Nama kamu"
           value={nama} onChange={(e) => setNama(e.target.value)} galat={galat.nama} />

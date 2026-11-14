@@ -45,11 +45,16 @@ export function masukDemo() {
     d.setDate(d.getDate() - i)
     logs.push({
       id: buatId(), user_id: user.id, tanggal: tanggalLokal(d), split: split[i % 7], protein_gram: protein[i],
-      berat_badan_kg: i % 2 ? Math.round((64 + (13 - i) * 0.12) * 10) / 10 : null,
       catatan: i === 2 ? 'PR squat 100 kg' : '', created_at: new Date().toISOString(),
     })
   }
-  const error = tulis({ user, logs })
+  // Pengukuran mingguan contoh; yang terakhir 8 hari lalu supaya pengingat mingguan terlihat di mode coba.
+  const pengukuran = [[22, 63.8], [15, 64.3], [8, 64.9]].map(([hariLalu, berat]) => {
+    const d = new Date()
+    d.setDate(d.getDate() - hariLalu)
+    return { id: buatId(), user_id: user.id, tanggal: tanggalLokal(d), berat_badan_kg: berat, tinggi_badan_cm: 170 }
+  })
+  const error = tulis({ user, logs, pengukuran })
   return error ? { data: null, error } : { data: user, error: null }
 }
 
@@ -97,4 +102,20 @@ export function hapusLog(id) {
   const isi = baca()
   isi.logs = isi.logs.filter((l) => l.id !== id)
   return { error: tulis(isi) }
+}
+
+export function ambilPengukuran() {
+  const daftar = [...(baca()?.pengukuran ?? [])].sort((a, b) => b.tanggal.localeCompare(a.tanggal))
+  return { data: daftar, error: null }
+}
+
+/** Simpan pengukuran hari ini (menimpa kalau hari ini sudah ada). */
+export function simpanPengukuran({ berat, tinggi }) {
+  const isi = baca()
+  if (!isi) return { data: null, error: { message: 'Mode coba sudah berakhir.' } }
+  const tanggal = tanggalLokal()
+  const baris = { id: buatId(), user_id: isi.user.id, tanggal, berat_badan_kg: berat, tinggi_badan_cm: tinggi }
+  isi.pengukuran = [...(isi.pengukuran ?? []).filter((p) => p.tanggal !== tanggal), baris]
+  const error = tulis(isi)
+  return error ? { data: null, error } : { data: baris, error: null }
 }

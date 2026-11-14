@@ -4,14 +4,25 @@ import { Check, CircleHelp, X } from 'lucide-react'
 import { bacaPenanda, setPenanda } from '../lib/panduan.js'
 
 /**
- * Kartu "Mulai di sini" untuk pengguna baru: 3 langkah yang tercentang otomatis.
+ * Kartu "Mulai di sini" untuk pengguna baru: 4 langkah yang tercentang otomatis.
  * onCatat: fungsi untuk menggulir ke form catat.
  */
-export default function Panduan({ user, jumlahLog, onCatat }) {
+export default function Panduan({ user, jumlahLog, adaDataTubuh, onCatat }) {
   const [tutup, setTutup] = useState(() => bacaPenanda(user.id, 'tutup'))
   if (tutup) return null
 
   const langkah = [
+    {
+      judul: 'Isi berat & tinggi badan',
+      isi: 'Cukup sekali. Setelah itu kamu hanya diingatkan seminggu sekali.',
+      selesai: adaDataTubuh,
+      aksi: (
+        <button type="button" className="tautan-langkah"
+          onClick={() => document.getElementById('judul-tubuh')?.scrollIntoView({ block: 'center' })}>
+          Isi sekarang
+        </button>
+      ),
+    },
     {
       judul: 'Cek target protein harian',
       isi: `Sekarang ${user.target_protein} g per hari. Ubah di Profil kalau perlu.`,
