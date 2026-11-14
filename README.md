@@ -49,6 +49,18 @@ Kode: `src/lib/supabase.js` (client), `src/lib/db.js` (semua akses data, `{ data
 
 **Konfirmasi email:** kalau "Confirm email" di Supabase (Authentication → Sign In / Providers → Email) masih aktif, user baru diminta membuka link di email sebelum bisa masuk. Matikan opsi itu kalau ingin langsung masuk setelah daftar.
 
+### Email sambutan (Resend)
+
+Setelah user mendaftar (email atau Google), aplikasi memanggil Edge Function **`kirim-email-sambutan`** (`supabase/functions/kirim-email-sambutan/index.ts`). Fungsi ini:
+
+- hanya bisa dipanggil user yang sudah login (verifikasi JWT aktif) dan hanya mengirim ke **email user itu sendiri**;
+- memakai secret **`RESEND_API_KEY`** di Supabase → Edge Functions → Secrets (tidak pernah ada di kode atau browser);
+- mengirim sekali saja: kolom `profil.email_sambutan_at` diklaim secara atomik sebelum kirim, dan dikosongkan lagi bila Resend gagal supaya dicoba ulang di login berikutnya.
+
+Tanpa domain sendiri, pengirimnya `onboarding@resend.dev` dan Resend **hanya mengirim ke email pemilik akun Resend**. Untuk mengirim ke semua user, verifikasi domain di Resend lalu atur secret `EMAIL_PENGIRIM`, misalnya `BulkUp <halo@domainmu.com>`.
+
+Deploy ulang fungsi (butuh Supabase CLI): `npx supabase functions deploy kirim-email-sambutan --project-ref utfexqmylqwdzgysqrxp`.
+
 ## Menjalankan
 
 Butuh Node.js 20.19 atau lebih baru (`node -v`).

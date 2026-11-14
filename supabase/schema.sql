@@ -1,6 +1,6 @@
 -- BulkUp (Bulking & Workout Tracker) — skema database Supabase
 -- Sudah diterapkan ke project "GlobDev" sebagai migration `buat_log_harian`, `buat_profil`,
--- dan `pengukuran_badan_dan_nama_google`.
+-- `pengukuran_badan_dan_nama_google`, dan `profil_email_sambutan`.
 -- Untuk project baru: Dashboard → SQL Editor → New query → tempel seluruh file → Run.
 --
 -- Tabel:
@@ -167,3 +167,11 @@ select user_id, tanggal, berat_badan_kg, created_at
 from public.log_harian
 where berat_badan_kg is not null
 on conflict (user_id, tanggal) do nothing;
+
+-- =====================================================================
+-- 4. Email sambutan (Resend lewat Edge Function kirim-email-sambutan)
+-- =====================================================================
+
+alter table public.profil add column if not exists email_sambutan_at timestamptz;
+comment on column public.profil.email_sambutan_at is
+  'Waktu email sambutan terkirim lewat Edge Function kirim-email-sambutan; null = belum.';
