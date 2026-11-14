@@ -4,8 +4,9 @@ import { ChartColumn, Pencil, Trash2 } from 'lucide-react'
 import * as db from '../lib/db.js'
 import { useAuth } from '../lib/auth.jsx'
 import { useLogs } from '../lib/useLogs.js'
+import { usePengukuran } from '../lib/usePengukuran.js'
 import {
-  WARNA_SPLIT, beratTerakhir, formatTanggal, hariLatihanMingguIni, keBarisLog,
+  WARNA_SPLIT, angkaId, beratTerakhir, formatTanggal, hariLatihanMingguIni, keBarisLog, teksHariLalu,
   pesanGalat, proteinHariIni, rataProtein7Hari,
 } from '../lib/bulking.js'
 import FormLog from '../components/FormLog.jsx'
@@ -14,11 +15,13 @@ import BannerDemo from '../components/BannerDemo.jsx'
 import { useKonfirmasi } from '../components/Konfirmasi.jsx'
 import Panduan from '../components/Panduan.jsx'
 import { useBukaFormCatat } from '../components/BottomNav.jsx'
+import KartuDataTubuh from '../components/DataTubuh.jsx'
 
 export default function Beranda() {
   const { user } = useAuth()
   const target = user.target_protein
   const { logs, setLogs, memuat, galat, setGalat, muat } = useLogs()
+  const { pengukuran, memuat: memuatTubuh, simpan: simpanTubuh } = usePengukuran()
   const [berhasil, setBerhasil] = useState('')
   const refForm = useRef(null)
   const refProtein = useRef(null)
@@ -66,12 +69,15 @@ export default function Beranda() {
   const sisa = Math.max(0, target - hariIni)
   const { rata, jumlahHari } = rataProtein7Hari(logs)
   const latihan = hariLatihanMingguIni(logs)
-  const berat = beratTerakhir(logs)
+  const berat = beratTerakhir(pengukuran)
 
   return (
     <>
       <BannerDemo />
-      {!memuat && <Panduan user={user} jumlahLog={logs.length} onCatat={bukaForm} />}
+      {!memuatTubuh && <KartuDataTubuh user={user} pengukuran={pengukuran} simpan={simpanTubuh} />}
+      {!memuat && !memuatTubuh && (
+        <Panduan user={user} jumlahLog={logs.length} adaDataTubuh={pengukuran.length > 0} onCatat={bukaForm} />
+      )}
 
       <div className="beranda-atas">
         {/* Satu kartu ringkasan: setiap angka hanya muncul sekali */}
@@ -104,11 +110,12 @@ export default function Beranda() {
             </div>
             <div>
               <dt>Berat badan</dt>
-              <dd><strong>{berat ? String(berat.berat).replace('.', ',') : '–'}</strong>{berat && ' kg'}</dd>
+              <dd><strong>{berat ? angkaId(berat.berat) : '–'}</strong>{berat && ' kg'}</dd>
               <dd className="ket">
-                {berat?.selisih != null
-                  ? `${berat.selisih > 0 ? '+' : ''}${String(berat.selisih).replace('.', ',')} kg dari sebelumnya`
-                  : 'terakhir dicatat'}
+                {!berat ? 'belum diisi'
+                  : berat.selisih != null
+                    ? `${berat.selisih > 0 ? '+' : ''}${angkaId(berat.selisih)} kg dari sebelumnya`
+                    : `dicek ${teksHariLalu(berat.tanggal)}`}
               </dd>
             </div>
           </dl>
@@ -152,7 +159,6 @@ export default function Beranda() {
                     </div>
                     <p>
                       <span className={capai ? 'tercapai' : ''}>{log.protein_gram} g protein{capai && ' ✓'}</span>
-                      {log.berat_badan_kg != null && <> · {String(Number(log.berat_badan_kg)).replace('.', ',')} kg</>}
                     </p>
                     {log.catatan && <p className="log-catatan">{log.catatan}</p>}
                   </div>

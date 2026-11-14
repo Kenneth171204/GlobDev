@@ -4,6 +4,7 @@ import { ArrowRight, Beef, ChartColumn, Dumbbell, Play } from 'lucide-react'
 import { useAuth } from '../lib/auth.jsx'
 import { pesanGalat } from '../lib/bulking.js'
 import Logo from '../components/Logo.jsx'
+import TombolGoogle from '../components/TombolGoogle.jsx'
 
 /** Ilustrasi buatan sendiri: dumbbell besar terangkat + konfeti sporty. */
 function Ilustrasi() {
@@ -67,7 +68,7 @@ export default function Onboarding() {
 
       <section className="onb-bawah">
         <p className="onb-intro">
-          Catat split latihan, protein, dan berat badan harian. Lihat progres bulking-mu dalam satu tempat.
+          Catat latihan dan protein harian, pantau berat badan tiap minggu. Lihat progres bulking-mu dalam satu tempat.
         </p>
         <ul className="onb-fitur">
           <li><span className="chip-ikon warna-oranye"><Dumbbell size={18} strokeWidth={2.6} /></span>Catat split</li>
@@ -75,6 +76,7 @@ export default function Onboarding() {
           <li><span className="chip-ikon warna-biru"><ChartColumn size={18} strokeWidth={2.6} /></span>Lihat progres</li>
         </ul>
         <div className="onb-aksi">
+          <TombolGoogle />
           <Link to="/daftar" className="tombol tombol-biru tombol-besar">
             Daftar gratis <ArrowRight size={22} strokeWidth={2.6} aria-hidden="true" />
           </Link>

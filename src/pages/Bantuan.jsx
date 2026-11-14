@@ -22,11 +22,19 @@ const FAQ = [
   },
   {
     t: 'Kenapa grafik di Statistik masih kosong?',
-    j: 'Grafik butuh data. Catat beberapa hari dulu. Grafik berat badan hanya muncul kalau kamu mengisi kolom berat badan.',
+    j: 'Grafik butuh data. Catat beberapa hari dulu. Grafik berat badan berasal dari data tubuh yang kamu isi atau konfirmasi setiap minggu.',
   },
   {
     t: 'Kalau hari ini tidak latihan, perlu dicatat?',
     j: 'Perlu. Pilih "Rest" lalu isi protein. Otot justru tumbuh saat istirahat, jadi asupan protein tetap penting.',
+  },
+  {
+    t: 'Kenapa berat badan tidak diisi setiap hari?',
+    j: 'Berat badan naik-turun setiap hari karena air dan makanan, jadi cukup dicek seminggu sekali. Isi berat & tinggi sekali di awal. Setiap 7 hari muncul pengingat kecil di Beranda: tekan "Masih sama" kalau tidak berubah, atau "Perbarui" untuk mengisi angka baru. Bisa juga diubah kapan saja di Profil, bagian Data tubuh.',
+  },
+  {
+    t: 'Bisa masuk dengan akun Google?',
+    j: 'Bisa. Tekan "Lanjutkan dengan Google" di halaman awal, Masuk, atau Daftar. Kalau email Google-mu sama dengan akun yang sudah ada, keduanya otomatis menjadi satu akun.',
   },
   {
     t: 'Apa bedanya akun dan "Coba tanpa akun"?',
@@ -76,7 +84,8 @@ export default function Bantuan() {
               <strong>Catat setiap hari</strong>
               <p>
                 Tekan tombol <b>+</b> (atau <b>Catat log</b> di layar lebar), pilih latihan hari itu, isi total protein,
-                dan berat badan kalau mau. <button type="button" className="tautan" onClick={bukaForm}>Catat sekarang</button>
+                lalu Simpan. Berat & tinggi badan cukup diisi sekali; kamu diingatkan seminggu sekali.{' '}
+                <button type="button" className="tautan" onClick={bukaForm}>Catat sekarang</button>
               </p>
             </div>
           </li>

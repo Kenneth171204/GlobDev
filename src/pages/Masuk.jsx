@@ -4,6 +4,7 @@ import { ArrowRight, Lock, Mail } from 'lucide-react'
 import { useAuth } from '../lib/auth.jsx'
 import { pesanGalat } from '../lib/bulking.js'
 import AuthLayout, { IsianIkon } from '../components/AuthLayout.jsx'
+import TombolGoogle, { PemisahAtau } from '../components/TombolGoogle.jsx'
 
 export default function Masuk() {
   const { masuk } = useAuth()
@@ -35,6 +36,8 @@ export default function Masuk() {
       subjudul="Lanjutkan progres bulking-mu."
       bawah={<>Belum punya akun? <Link to="/daftar">Daftar</Link></>}
     >
+      <TombolGoogle label="Masuk dengan Google" />
+      <PemisahAtau />
       <form className="form" onSubmit={kirim} noValidate>
         <IsianIkon id="email" label="Email" ikon={Mail} type="email" autoComplete="email" placeholder="kamu@email.com"
           value={email} onChange={(e) => setEmail(e.target.value)} galat={galat.email} />

@@ -5,7 +5,7 @@
 
 import { supabase } from './supabase.js'
 import * as demo from './db-demo.js'
-import { TARGET_PROTEIN } from './bulking.js'
+import { TARGET_PROTEIN, tanggalLokal } from './bulking.js'
 
 const modeDemo = () => demo.userDemo() !== null
 
@@ -65,6 +65,21 @@ export async function masuk({ email, password }) {
   return muatUser(data.user)
 }
 
+/**
+ * Masuk / daftar dengan Google. Browser pindah ke halaman Google, lalu kembali ke
+ * situs ini; supabase-js membaca sesi dari URL dan AuthProvider mengarahkan ke Beranda.
+ * Alamat kembali harus terdaftar di Supabase: Authentication → URL Configuration → Redirect URLs.
+ */
+export async function masukGoogle() {
+  return supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${window.location.origin}/`,
+      queryParams: { prompt: 'select_account' }, // selalu tampilkan pilihan akun Google
+    },
+  })
+}
+
 export const masukDemo = demo.masukDemo
 export const userDemo = demo.userDemo
 
@@ -114,4 +129,22 @@ export async function hapusLog(id) {
   if (modeDemo()) return demo.hapusLog(id)
   const { error } = await supabase.from('log_harian').delete().eq('id', id)
   return { error }
+}
+
+// ---------- Berat & tinggi badan (pengukuran_badan) ----------
+
+export async function ambilPengukuran() {
+  if (modeDemo()) return demo.ambilPengukuran()
+  return supabase.from('pengukuran_badan').select('*').order('tanggal', { ascending: false }).limit(400)
+}
+
+/**
+ * Simpan berat & tinggi untuk hari ini. Kalau hari ini sudah ada, ditimpa.
+ * Dipakai juga untuk tombol "Masih sama" (nilai sama, tanggal hari ini).
+ */
+export async function simpanPengukuran({ berat, tinggi }) {
+  if (modeDemo()) return demo.simpanPengukuran({ berat, tinggi })
+  return supabase.from('pengukuran_badan')
+    .upsert({ tanggal: tanggalLokal(), berat_badan_kg: berat, tinggi_badan_cm: tinggi }, { onConflict: 'user_id,tanggal' })
+    .select().single()
 }

@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react'
 import { setPenanda } from '../lib/panduan.js'
-import { LogOut, Mail, Target } from 'lucide-react'
+import { LogOut, Mail, Ruler, Target } from 'lucide-react'
 import { useAuth } from '../lib/auth.jsx'
 import { useLogs } from '../lib/useLogs.js'
-import { beratTerakhir, pesanGalat, streakTarget, validasiTarget } from '../lib/bulking.js'
+import { usePengukuran } from '../lib/usePengukuran.js'
+import {
+  HARI_PENGINGAT, angkaId, beratTerakhir, hariSejak, pesanGalat, streakTarget, teksHariLalu, validasiTarget,
+} from '../lib/bulking.js'
+import { FormDataTubuh } from '../components/DataTubuh.jsx'
 import BannerDemo from '../components/BannerDemo.jsx'
 import { useKonfirmasi } from '../components/Konfirmasi.jsx'
 
@@ -11,6 +15,9 @@ export default function Profil() {
   const { user, keluar, perbaruiProfil } = useAuth()
   const konfirmasi = useKonfirmasi()
   const { logs } = useLogs()
+  const { pengukuran, simpan: simpanTubuh } = usePengukuran()
+  const [ubahTubuh, setUbahTubuh] = useState(false)
+  const [infoTubuh, setInfoTubuh] = useState('')
   const [target, setTarget] = useState(String(user.target_protein))
   const [galat, setGalat] = useState('')
   const [berhasil, setBerhasil] = useState('')
@@ -19,7 +26,8 @@ export default function Profil() {
   // Langkah "Cek target protein" di kartu Mulai di sini dianggap selesai setelah Profil dibuka.
   useEffect(() => { setPenanda(user.id, 'profil') }, [user.id])
 
-  const berat = beratTerakhir(logs)
+  const berat = beratTerakhir(pengukuran)
+  const sisaHari = berat ? Math.max(0, HARI_PENGINGAT - hariSejak(berat.tanggal)) : 0
   const saran = berat ? Math.round(berat.berat * 2) : null
   const totalLatihan = logs.filter((l) => l.split !== 'Rest').length
   const streak = streakTarget(logs, user.target_protein)
@@ -72,6 +80,41 @@ export default function Profil() {
       </section>
 
       <div className="kolom">
+      <section className="kartu" aria-labelledby="judul-data-tubuh">
+        <div className="judul-kartu-baris">
+          <h2 className="judul-kartu" id="judul-data-tubuh">Data tubuh</h2>
+          <span className="chip-ikon warna-biru" aria-hidden="true"><Ruler size={18} strokeWidth={2.6} /></span>
+        </div>
+        {ubahTubuh || !berat ? (
+          <FormDataTubuh
+            awal={berat}
+            labelSimpan="Simpan data tubuh"
+            onBatal={berat ? () => setUbahTubuh(false) : undefined}
+            onSimpan={async (nilai) => {
+              const pesan = await simpanTubuh(nilai)
+              if (!pesan) { setUbahTubuh(false); setInfoTubuh('Data tubuh tersimpan.') }
+              return pesan
+            }}
+          />
+        ) : (
+          <>
+            <dl className="data-tubuh">
+              <div><dt>Berat badan</dt><dd>{angkaId(berat.berat)} <small>kg</small></dd></div>
+              <div><dt>Tinggi badan</dt><dd>{berat.tinggi != null ? <>{angkaId(berat.tinggi)} <small>cm</small></> : '–'}</dd></div>
+            </dl>
+            <p className="petunjuk">
+              Diperbarui {teksHariLalu(berat.tanggal)}.{' '}
+              {sisaHari > 0 ? `Pengingat berikutnya dalam ${sisaHari} hari.` : 'Waktunya cek ulang berat badan.'}
+            </p>
+            {infoTubuh && <p className="berhasil" role="status">{infoTubuh}</p>}
+            <button type="button" className="tombol tombol-garis tombol-kecil" style={{ marginTop: 12 }}
+              onClick={() => { setInfoTubuh(''); setUbahTubuh(true) }}>
+              Perbarui berat & tinggi
+            </button>
+          </>
+        )}
+      </section>
+
       <section className="kartu">
         <div className="judul-kartu-baris">
           <h2 className="judul-kartu">Target protein harian</h2>
@@ -93,7 +136,7 @@ export default function Profil() {
           </div>
           {saran && (
             <p className="saran">
-              Saran untuk bulking: sekitar 2 g per kg berat badan × {String(berat.berat).replace('.', ',')} kg ={' '}
+              Saran untuk bulking: sekitar 2 g per kg berat badan × {angkaId(berat.berat)} kg ={' '}
               <strong>{saran} g</strong>.{' '}
               <button type="button" className="tautan" onClick={() => { setTarget(String(saran)); setBerhasil('') }}>
                 Pakai angka ini
@@ -101,7 +144,7 @@ export default function Profil() {
             </p>
           )}
           {!saran && (
-            <p className="saran">Isi berat badan di log harian, nanti muncul saran target yang sesuai berat badanmu.</p>
+            <p className="saran">Isi berat badan di kartu Data tubuh, nanti muncul saran target yang sesuai berat badanmu.</p>
           )}
           {berhasil && <p className="berhasil">{berhasil}</p>}
           <button className="tombol tombol-oranye" type="submit"
